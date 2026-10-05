@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind utilities;
+
+/* ---- Theme tokens (scoped) ------------------------------------------ */
+#bug-tracker-root {
+  --bt-background: 220 20% 97%;
+  --bt-foreground: 224 30% 12%;
+  --bt-card: 0 0% 100%;
+  --bt-card-foreground: 224 30% 12%;
+  --bt-popover: 0 0% 100%;
+  --bt-popover-foreground: 224 30% 12%;
+  --bt-primary: 243 75% 59%;
+  --bt-primary-foreground: 0 0% 100%;
+  --bt-secondary: 220 16% 93%;
+  --bt-secondary-foreground: 224 30% 20%;
+  --bt-muted: 220 16% 94%;
+  --bt-muted-foreground: 220 9% 40%;
+  --bt-accent: 226 70% 95%;
+  --bt-accent-foreground: 243 60% 40%;
+  --bt-destructive: 0 72% 51%;
+  --bt-destructive-foreground: 0 0% 100%;
+  --bt-border: 220 14% 89%;
+  --bt-input: 220 14% 85%;
+  --bt-ring: 243 75% 59%;
+  --bt-chart-grid: 220 14% 88%;
+}
+#bug-tracker-root.bt-dark {
+  --bt-background: 226 28% 9%;
+  --bt-foreground: 220 20% 94%;
+  --bt-card: 226 25% 12%;
+  --bt-card-foreground: 220 20% 94%;
+  --bt-popover: 226 25% 13%;
+  --bt-popover-foreground: 220 20% 94%;
+  --bt-primary: 238 85% 70%;
+  --bt-primary-foreground: 226 40% 8%;
+  --bt-secondary: 226 18% 18%;
+  --bt-secondary-foreground: 220 20% 90%;
+  --bt-muted: 226 18% 16%;
+  --bt-muted-foreground: 220 12% 66%;
+  --bt-accent: 232 30% 20%;
+  --bt-accent-foreground: 230 80% 85%;
+  --bt-destructive: 0 70% 56%;
+  --bt-destructive-foreground: 0 0% 100%;
+  --bt-border: 226 16% 21%;
+  --bt-input: 226 16% 26%;
+  --bt-ring: 238 85% 70%;
+  --bt-chart-grid: 226 16% 22%;
+  color-scheme: dark;
+}
+
+/* ---- Scoped reset (replaces Tailwind preflight) ----------------------- */
+#bug-tracker-root,
+#bug-tracker-root *,
+#bug-tracker-root *::before,
+#bug-tracker-root *::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: hsl(var(--bt-border));
+}
+#bug-tracker-root {
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: hsl(var(--bt-foreground));
+  background: hsl(var(--bt-background));
+  min-height: calc(100vh - 32px);
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+@media (max-width: 782px) { #bug-tracker-root { min-height: calc(100vh - 46px); } }
+#bug-tracker-root h1, #bug-tracker-root h2, #bug-tracker-root h3, #bug-tracker-root h4,
+#bug-tracker-root h5, #bug-tracker-root h6 { margin: 0; padding: 0; font-size: inherit; font-weight: inherit; line-height: inherit; color: inherit; }
+#bug-tracker-root p, #bug-tracker-root dl, #bug-tracker-root dd, #bug-tracker-root figure, #bug-tracker-root blockquote { margin: 0; }
+#bug-tracker-root ul, #bug-tracker-root ol { margin: 0; padding: 0; list-style: none; }
+#bug-tracker-root a { color: inherit; text-decoration: none; }
+#bug-tracker-root a:hover, #bug-tracker-root a:focus, #bug-tracker-root a:active { color: inherit; box-shadow: none; }
+#bug-tracker-root a:focus-visible, #bug-tracker-root button:focus-visible, #bug-tracker-root [tabindex]:focus-visible {
+  outline: 2px solid hsl(var(--bt-ring)); outline-offset: 2px; box-shadow: none;
+}
+#bug-tracker-root button, #bug-tracker-root input, #bug-tracker-root select, #bug-tracker-root textarea {
+  font: inherit; color: inherit; margin: 0; letter-spacing: inherit;
+}
+#bug-tracker-root button { background: transparent; cursor: pointer; padding: 0; text-transform: none; }
+#bug-tracker-root button:disabled { cursor: not-allowed; }
+#bug-tracker-root input:focus, #bug-tracker-root textarea:focus, #bug-tracker-root select:focus { box-shadow: none; outline: none; border-color: hsl(var(--bt-ring)); }
+#bug-tracker-root img, #bug-tracker-root svg { display: block; vertical-align: middle; }
+#bug-tracker-root img { max-width: 100%; height: auto; }
+#bug-tracker-root table { border-collapse: collapse; border-spacing: 0; width: 100%; margin: 0; background: transparent; }
+#bug-tracker-root th, #bug-tracker-root td { padding: 0; text-align: left; }
+#bug-tracker-root code, #bug-tracker-root pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+#bug-tracker-root [hidden] { display: none !important; }
+#bug-tracker-root input[type='checkbox'], #bug-tracker-root input[type='radio'] { box-shadow: none; }
+
+/* ---- WordPress admin chrome tweaks (only on our page) ----------------- */
+body.toplevel_page_bug-tracker #wpcontent { padding-left: 0; }
+body.toplevel_page_bug-tracker #wpbody-content { padding-bottom: 0; float: none; }
+body.toplevel_page_bug-tracker #wpfooter { display: none; }
+body.toplevel_page_bug-tracker #wpbody-content > .notice,
+body.toplevel_page_bug-tracker #wpbody-content > .update-nag { margin: 10px 20px; }
+
+/* Scrollbars */
+#bug-tracker-root ::-webkit-scrollbar { width: 10px; height: 10px; }
+#bug-tracker-root ::-webkit-scrollbar-thumb { background: hsl(var(--bt-border)); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+@media print { body.toplevel_page_bug-tracker #adminmenumain { display: none; } }
+@media (prefers-reduced-motion: reduce) { #bug-tracker-root * { animation: none !important; transition: none !important; } }
+
+/* Recharts theming (works in light + dark) */
+#bug-tracker-root .recharts-cartesian-axis-tick-value { fill: hsl(var(--bt-muted-foreground)); font-size: 12px; }
+#bug-tracker-root .recharts-cartesian-grid line { stroke: hsl(var(--bt-chart-grid)); }
+#bug-tracker-root .recharts-legend-item-text { color: hsl(var(--bt-foreground)) !important; }
+#bug-tracker-root .recharts-surface { overflow: visible; }
+#bug-tracker-root .recharts-wrapper:focus, #bug-tracker-root .recharts-wrapper *:focus { outline: none; }
