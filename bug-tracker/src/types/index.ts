@@ -72,7 +72,7 @@ export interface BugFilters {
 }
 
 export interface BugTrackerConfig {
-  restUrl: string; nonce: string; siteName: string; adminUrl: string;
+  restUrl: string; nonce: string; siteName: string; adminUrl: string; homeUrl: string; logoutUrl: string;
   user: { id: number; name: string; avatar: string; caps: Record<string, boolean> };
 }
 declare global { interface Window { BugTrackerConfig: BugTrackerConfig } }

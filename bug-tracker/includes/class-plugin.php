@@ -15,6 +15,7 @@ class BT_Plugin {
 	private function __construct() {
 		add_action( 'plugins_loaded', array( 'BT_Database', 'maybe_upgrade' ) );
 		( new BT_REST_API() )->init();
+		( new BT_App_Page() )->init();
 		if ( is_admin() ) {
 			( new BT_Admin_Page() )->init();
 		}
@@ -27,9 +28,12 @@ class BT_Plugin {
 			add_option( BT_Settings::OPTION, BT_Settings::defaults(), '', false );
 		}
 		BT_Helpers::upload_dir();
+		BT_App_Page::add_rewrite();
+		flush_rewrite_rules();
 	}
 
 	public static function deactivate() {
 		// Data and roles are kept so re-activation loses nothing.
+		flush_rewrite_rules();
 	}
 }

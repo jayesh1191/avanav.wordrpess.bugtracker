@@ -11,11 +11,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/ui/states';
 import { Pagination } from '@/components/Pagination';
 import { config } from '@/api/client';
+import { useApp } from '@/store/app';
 import { useUsers } from '@/hooks/useData';
 import { useDebounce } from '@/hooks/useDebounce';
 import { timeAgo } from '@/utils/format';
 
 export default function Users() {
+  const { can } = useApp();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const debounced = useDebounce(search);
@@ -26,7 +28,7 @@ export default function Users() {
   return (
     <>
       <PageHeader title="Users" crumbs={[{ label: 'Users' }]} description="WordPress users who can use the Bug Tracker."
-        actions={<Button asChild variant="outline"><a href={`${config().adminUrl}users.php`}>Manage in WordPress<ExternalLink className="h-3.5 w-3.5" /></a></Button>} />
+        actions={can('manage_bug_tracker_users') && <Button asChild variant="outline"><a href={`${config().adminUrl}users.php`}>Manage in WordPress<ExternalLink className="h-3.5 w-3.5" /></a></Button>} />
       <Card>
         <div className="border-b border-border p-3"><div className="relative max-w-sm"><Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-8" placeholder="Search users" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} aria-label="Search users" /></div></div>
         {q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : (

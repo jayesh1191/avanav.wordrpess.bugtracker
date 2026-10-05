@@ -64,11 +64,10 @@
   line-height: 1.5;
   color: hsl(var(--bt-foreground));
   background: hsl(var(--bt-background));
-  min-height: calc(100vh - 32px);
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   position: relative;
 }
-@media (max-width: 782px) { #bug-tracker-root { min-height: calc(100vh - 46px); } }
 #bug-tracker-root h1, #bug-tracker-root h2, #bug-tracker-root h3, #bug-tracker-root h4,
 #bug-tracker-root h5, #bug-tracker-root h6 { margin: 0; padding: 0; font-size: inherit; font-weight: inherit; line-height: inherit; color: inherit; }
 #bug-tracker-root p, #bug-tracker-root dl, #bug-tracker-root dd, #bug-tracker-root figure, #bug-tracker-root blockquote { margin: 0; }
@@ -92,17 +91,9 @@
 #bug-tracker-root [hidden] { display: none !important; }
 #bug-tracker-root input[type='checkbox'], #bug-tracker-root input[type='radio'] { box-shadow: none; }
 
-/* ---- WordPress admin chrome tweaks (only on our page) ----------------- */
-body.toplevel_page_bug-tracker #wpcontent { padding-left: 0; }
-body.toplevel_page_bug-tracker #wpbody-content { padding-bottom: 0; float: none; }
-body.toplevel_page_bug-tracker #wpfooter { display: none; }
-body.toplevel_page_bug-tracker #wpbody-content > .notice,
-body.toplevel_page_bug-tracker #wpbody-content > .update-nag { margin: 10px 20px; }
-
 /* Scrollbars */
 #bug-tracker-root ::-webkit-scrollbar { width: 10px; height: 10px; }
 #bug-tracker-root ::-webkit-scrollbar-thumb { background: hsl(var(--bt-border)); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
-@media print { body.toplevel_page_bug-tracker #adminmenumain { display: none; } }
 @media (prefers-reduced-motion: reduce) { #bug-tracker-root * { animation: none !important; transition: none !important; } }
 
 /* Recharts theming (works in light + dark) */

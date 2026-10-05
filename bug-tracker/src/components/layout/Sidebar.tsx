@@ -18,12 +18,12 @@ export function Sidebar() {
   ];
   return (
     <>
-      {sidebarOpen && <div className="fixed inset-0 top-[46px] z-[99004] bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} aria-hidden />}
+      {sidebarOpen && <div className="fixed inset-0 z-[99004] bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} aria-hidden />}
       <aside
         aria-label="Bug Tracker navigation"
         className={cn(
-          'fixed left-0 top-[46px] bottom-0 z-[99005] w-64 flex flex-col border-r border-border bg-card transition-transform',
-          'lg:sticky lg:top-[32px] lg:h-[calc(100vh-32px)] lg:translate-x-0 lg:z-10 lg:shrink-0 lg:w-60',
+          'fixed left-0 top-0 bottom-0 z-[99005] w-64 flex flex-col border-r border-border bg-card transition-transform',
+          'lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-10 lg:shrink-0 lg:w-60',
           sidebarOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full',
         )}
       >

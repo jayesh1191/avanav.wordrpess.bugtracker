@@ -44,7 +44,7 @@ class BT_Notifications {
 				wp_mail(
 					$u->user_email,
 					sprintf( '[%s] %s', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), wp_strip_all_tags( $message ) ),
-					wp_strip_all_tags( $message ) . "\n\n" . admin_url( 'admin.php?page=bug-tracker#/bugs/' . (int) $bug->id )
+					wp_strip_all_tags( $message ) . "\n\n" . BT_App_Page::url( '/bugs/' . (int) $bug->id )
 				);
 			}
 		}

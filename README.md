@@ -2,7 +2,7 @@
 
 A standalone WordPress plugin: **WordPress is the backend, React is the entire UI.**
 PHP only provides the REST API, database access, authentication and permissions.
-The admin page renders a single `<div id="bug-tracker-root">` and the React app does the rest.
+The app lives at its **own front-end URL — `https://your-site.com/bug-tracker/`** (or `/?bug_tracker_app=1` with plain permalinks) — not inside wp-admin. PHP prints a bare HTML shell with a single `<div id="bug-tracker-root">` and the React app does the rest. Visitors who are not logged in are sent to the WordPress login and returned to the app; users without `view_bug_tracker` get a 403. The *Bug Tracker* item in the wp-admin menu simply opens that URL. The slug can be changed with the `bug_tracker_app_slug` filter.
 
 ```
 bug-tracker/                  <- the plugin (zip/copy this folder into wp-content/plugins)
@@ -16,7 +16,8 @@ bug-tracker/                  <- the plugin (zip/copy this folder into wp-conten
 │   ├── class-settings.php    statuses / priorities / severities / options
 │   ├── class-notifications.php
 │   └── rest/                 bugs, projects, dashboard/reports/users/settings controllers
-├── admin/class-admin-page.php   menu + enqueue of the compiled assets
+├── includes/class-app-page.php  the standalone /bug-tracker/ URL (rewrite rule + HTML shell)
+├── admin/class-admin-page.php   wp-admin menu link that opens the app
 ├── src/                      React + TypeScript source (components, pages, hooks, api, types, utils, store)
 ├── build/                    compiled app.js / app.css (committed so the plugin is installable as-is)
 ├── package.json, vite.config.ts, tailwind.config.js
@@ -35,7 +36,7 @@ npm install
 npm run dev     # vite build --watch → build/app.js + app.css
 npm run build   # typecheck + production build
 ```
-The UI is a hash-routed SPA (`admin.php?page=bug-tracker#/bugs/12`). Tailwind has preflight disabled and every utility is scoped under `#bug-tracker-root`, so it cannot restyle the WordPress admin (and WordPress admin CSS is reset inside the root).
+The UI is a hash-routed SPA (`/bug-tracker/#/bugs/12`). Tailwind preflight is disabled and every rule is scoped under `#bug-tracker-root`.
 
 ## Stack
 React 18, TypeScript, Vite, React Router, Tailwind CSS, shadcn/ui-style components on Radix primitives, Lucide, React Hook Form + Zod, TanStack Query, Recharts. Backend: WordPress Plugin API, REST API, `$wpdb` (prepared statements only).

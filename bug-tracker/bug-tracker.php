@@ -28,6 +28,7 @@ require_once BUG_TRACKER_PATH . 'includes/rest/class-bugs-controller.php';
 require_once BUG_TRACKER_PATH . 'includes/rest/class-projects-controller.php';
 require_once BUG_TRACKER_PATH . 'includes/rest/class-misc-controller.php';
 require_once BUG_TRACKER_PATH . 'includes/class-rest-api.php';
+require_once BUG_TRACKER_PATH . 'includes/class-app-page.php';
 require_once BUG_TRACKER_PATH . 'admin/class-admin-page.php';
 require_once BUG_TRACKER_PATH . 'includes/class-plugin.php';
 

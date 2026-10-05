@@ -245,7 +245,7 @@ export default function BugDetail() {
           </CardContent></Card>
         </div>
 
-        <Card className="h-fit lg:sticky lg:top-[100px]">
+        <Card className="h-fit lg:sticky lg:top-[72px]">
           <CardHeader><CardTitle>Details</CardTitle></CardHeader>
           <CardContent>
             <dl className="space-y-3">
