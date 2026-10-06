@@ -1,5 +1,4 @@
 node_modules/
 .package/
-bug-tracker.zip
 *.log
 .DS_Store

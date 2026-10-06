@@ -25,7 +25,7 @@ bug-tracker/                  <- the plugin (zip/copy this folder into wp-conten
 
 ## Install
 * **From source:** copy `bug-tracker/` to `wp-content/plugins/`, activate it under *Plugins*.
-* **As a zip:** `cd bug-tracker && npm install && npm run package` creates `bug-tracker.zip` in the repo root.
+* **As a zip:** `cd bug-tracker && npm install && npm run package` creates `dist/bug-tracker.zip` (a ready-to-install copy is committed in `dist/`).
 
 The compiled assets in `bug-tracker/build/` are committed, so no Node toolchain is needed on the server.
 
