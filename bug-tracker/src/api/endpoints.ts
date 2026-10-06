@@ -25,6 +25,7 @@ export const ProjectsApi = {
   get: (id: number) => api.get<Project>(`projects/${id}`),
   create: (d: Record<string, unknown>) => api.post<Project>('projects', d),
   update: (id: number, d: Record<string, unknown>) => api.put<Project>(`projects/${id}`, d),
+  favorite: (id: number, favorite: boolean) => api.put<Project>(`projects/${id}/favorite`, { favorite }),
   remove: (id: number, force = false) => api.del<unknown>(`projects/${id}`, { force: force ? 1 : 0 }),
 };
 

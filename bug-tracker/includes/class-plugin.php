@@ -18,6 +18,7 @@ class BT_Plugin {
 		( new BT_App_Page() )->init();
 		if ( is_admin() ) {
 			( new BT_Admin_Page() )->init();
+			( new BT_Settings_Page() )->init();
 		}
 	}
 

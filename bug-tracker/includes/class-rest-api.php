@@ -76,6 +76,8 @@ class BT_REST_API {
 			$h( 'DELETE', array( $projects, 'destroy' ), $mgr_proj, $id ),
 		) );
 
+		$route( '/projects/(?P<id>\d+)/favorite', array( $h( 'PUT,POST', array( $projects, 'favorite' ), $view, $id ) ) );
+
 		$route( '/notifications', array( $h( 'GET', array( $misc, 'notifications' ), $view ) ) );
 		$route( '/notifications/read-all', array( $h( 'PUT', array( $misc, 'notifications_read_all' ), $view ) ) );
 		$route( '/notifications/(?P<id>\d+)/read', array( $h( 'PUT', array( $misc, 'notification_read' ), $view, $id ) ) );

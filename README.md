@@ -17,11 +17,20 @@ bug-tracker/                  <- the plugin (zip/copy this folder into wp-conten
 │   ├── class-notifications.php
 │   └── rest/                 bugs, projects, dashboard/reports/users/settings controllers
 ├── includes/class-app-page.php  the standalone /bug-tracker/ URL (rewrite rule + HTML shell)
+├── includes/class-demo-data.php generate / remove sample data
 ├── admin/class-admin-page.php   wp-admin menu link that opens the app
+├── admin/class-settings-page.php wp-admin 'Settings & tools' screen (demo data)
 ├── src/                      React + TypeScript source (components, pages, hooks, api, types, utils, store)
 ├── build/                    compiled app.js / app.css (committed so the plugin is installable as-is)
 ├── package.json, vite.config.ts, tailwind.config.js
 ```
+
+## Settings, favourites and demo data
+* **Collapsible sidebar:** the burger button in the top bar collapses the sidebar to icons (remembered per user).
+* **Starred projects:** click the star on a project (list, detail page) to favourite it – per user. Starred projects get their own *Starred* section in the sidebar (hidden when empty) and sort first on the Projects page.
+* **Appearance settings** (in-app *Settings → Appearance*): app name, default theme, density (34/42px rows), accent colour, default bugs view, grouping, sidebar default and visible list columns.
+* **Demo data:** *wp-admin → Bug Tracker → Settings & tools* generates realistic sample users, projects, bugs, comments and activity, and can remove exactly what it created.
+* Opening a bug always refetches it (and its comments/activity) so you never see stale data.
 
 ## Install
 * **From source:** copy `bug-tracker/` to `wp-content/plugins/`, activate it under *Plugins*.
@@ -56,6 +65,6 @@ Attachments are stored in `wp-content/uploads/bug-tracker/` (direct web access d
 `GET|POST /bugs` · `GET|PUT|DELETE /bugs/{id}` · `POST /bugs/bulk` ·
 `GET|POST /bugs/{id}/comments` · `DELETE /comments/{id}` · `GET /bugs/{id}/activity` ·
 `POST /bugs/{id}/attachments` · `DELETE /attachments/{id}` · `GET /attachments/{id}/download` ·
-`GET|POST /projects` · `GET|PUT|DELETE /projects/{id}` ·
+`GET|POST /projects` · `GET|PUT|DELETE /projects/{id}` · `PUT /projects/{id}/favorite` ·
 `GET /notifications` · `PUT /notifications/{id}/read` · `PUT /notifications/read-all` ·
 `GET|PUT /settings`

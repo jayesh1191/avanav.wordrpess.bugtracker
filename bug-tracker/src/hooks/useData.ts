@@ -11,8 +11,8 @@ export const keys = {
 };
 
 export const useBugs = (f: BugFilters) =>
-  useQuery({ queryKey: [...keys.bugs, f], queryFn: () => BugsApi.list(f), placeholderData: keepPreviousData });
-export const useBug = (id: number) => useQuery({ queryKey: keys.bug(id), queryFn: () => BugsApi.get(id), enabled: id > 0 });
+  useQuery({ queryKey: [...keys.bugs, f], queryFn: () => BugsApi.list(f), placeholderData: keepPreviousData, refetchOnMount: 'always' });
+export const useBug = (id: number) => useQuery({ queryKey: keys.bug(id), queryFn: () => BugsApi.get(id), enabled: id > 0, staleTime: 0, refetchOnMount: 'always' });
 export const useProjects = (p?: { status?: string; search?: string }) =>
   useQuery({ queryKey: [...keys.projects, p ?? {}], queryFn: () => ProjectsApi.list(p) });
 export const useProject = (id: number) => useQuery({ queryKey: ['project', id], queryFn: () => ProjectsApi.get(id), enabled: id > 0 });

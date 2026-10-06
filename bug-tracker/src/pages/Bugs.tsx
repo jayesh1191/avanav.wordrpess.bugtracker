@@ -44,7 +44,7 @@ const SORTS = [
 ];
 
 export default function Bugs() {
-  const { can, settings } = useApp();
+  const { can, settings, ui } = useApp();
   const nav = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
@@ -66,7 +66,8 @@ export default function Bugs() {
     page: Math.max(1, Number(sp.get('page')) || 1),
     per_page: Number(sp.get('per_page')) || undefined,
   };
-  const groupByStatus = sp.get('group') === 'status';
+  const groupByStatus = (sp.get('group') ?? (ui.group_by_status ? 'status' : 'none')) === 'status';
+  const cols = ui.columns;
   const patch = (p: Record<string, string | number | undefined>, keepPage = false) =>
     setSp((prev) => {
       const next = new URLSearchParams(prev);
@@ -79,6 +80,13 @@ export default function Bugs() {
   const debounced = useDebounce(searchText, 300);
   useEffect(() => { setSearchText(sp.get('search') ?? ''); }, [sp.get('search')]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (debounced !== (sp.get('search') ?? '')) patch({ search: debounced }); }, [debounced]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Admin-configured default view applies only when arriving without any explicit params.
+  useEffect(() => {
+    if (sp.toString() !== '' || ui.default_view === 'all' || !settings) return;
+    const v = ui.default_view === 'mine' ? { assignee_id: 'me' } : { status: (settings.statuses.filter((s) => ['open', 'in_progress'].includes(s.category)).map((s) => s.slug).join(',')) };
+    patch(v);
+  }, [settings, ui.default_view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const q = useBugs(filters);
   const items = q.data?.items ?? [];
@@ -161,7 +169,7 @@ export default function Bugs() {
       <div
         role="row"
         onClick={(e) => { if (!(e.target as HTMLElement).closest('button,a,[role=checkbox],[role=menuitem]')) nav(`/bugs/${b.id}`); }}
-        className={cn('group flex cursor-pointer flex-wrap items-center gap-x-2.5 border-b border-border/70 px-3 py-1.5 hover:bg-muted/60 md:h-[34px] md:flex-nowrap md:py-0', selected.has(b.id) && 'bg-primary/[0.06] hover:bg-primary/[0.08]', q.isPlaceholderData && 'opacity-60')}
+        className={cn('group flex cursor-pointer flex-wrap items-center gap-x-2.5 border-b border-border/70 px-3 py-1.5 hover:bg-muted/60 md:h-[var(--bt-row-h,34px)] md:flex-nowrap md:py-0', selected.has(b.id) && 'bg-primary/[0.06] hover:bg-primary/[0.08]', q.isPlaceholderData && 'opacity-60')}
       >
         <div className="flex w-4 shrink-0"><Checkbox checked={selected.has(b.id)} onCheckedChange={() => toggle(b.id)} aria-label={`Select ${bugRef(b)}`} /></div>
         <div className={cn('flex shrink-0 items-center', W.pri)}><PriorityBadge slug={b.priority} collapse /></div>
@@ -181,17 +189,17 @@ export default function Bugs() {
             </span>
           )}
         </div>
-        <div className={cn('shrink-0 items-center', W.sev)}><SeverityBadge slug={b.severity} /></div>
-        <div className={cn('shrink-0 items-center truncate text-[12.5px]', W.proj)}>
+        {cols.severity && <div className={cn('shrink-0 items-center', W.sev)}><SeverityBadge slug={b.severity} /></div>}
+        {cols.project && <div className={cn('shrink-0 items-center truncate text-[12.5px]', W.proj)}>
           {b.project && <span className="inline-flex min-w-0 items-center gap-1.5" title={b.project.name}><span className="h-2 w-2 shrink-0 rounded-[3px]" style={{ background: b.project.color }} /><span className="truncate">{b.project.name}</span></span>}
-        </div>
-        <div className={cn('shrink-0 items-center gap-1.5 text-[12.5px]', W.asg)} title={b.assignee?.name ?? 'Unassigned'}>
+        </div>}
+        {cols.assignee && <div className={cn('shrink-0 items-center gap-1.5 text-[12.5px]', W.asg)} title={b.assignee?.name ?? 'Unassigned'}>
           {b.assignee ? <><Avatar user={b.assignee} size={18} /><span className="hidden truncate xl:inline">{b.assignee.name}</span></> : <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-dashed border-muted-foreground/50 text-muted-foreground/60" />}
           {!b.assignee && <span className="hidden text-muted-foreground xl:inline">Unassigned</span>}
-        </div>
-        <div className={cn('shrink-0 items-center', W.rep)} title={`Reporter: ${b.reporter?.name ?? 'unknown'}`}><Avatar user={b.reporter} size={18} /></div>
-        <div className={cn('shrink-0 text-xs text-muted-foreground', W.created)} title={b.created_at}>{formatDate(b.created_at).replace(/, \d{4}$/, '')}</div>
-        <div className={cn('shrink-0 text-xs text-muted-foreground', W.upd)}>{timeAgoShort(b.updated_at)}</div>
+        </div>}
+        {cols.reporter && <div className={cn('shrink-0 items-center', W.rep)} title={`Reporter: ${b.reporter?.name ?? 'unknown'}`}><Avatar user={b.reporter} size={18} /></div>}
+        {cols.created && <div className={cn('shrink-0 text-xs text-muted-foreground', W.created)} title={b.created_at}>{formatDate(b.created_at).replace(/, \d{4}$/, '')}</div>}
+        {cols.updated && <div className={cn('shrink-0 text-xs text-muted-foreground', W.upd)}>{timeAgoShort(b.updated_at)}</div>}
         <div className="ml-auto shrink-0 md:ml-0">
           <DropdownMenu>
             <DropdownMenuTrigger className="rounded p-1 text-muted-foreground opacity-0 hover:bg-accent focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100 max-md:opacity-100" aria-label={`Actions for ${bugRef(b)}`}><MoreHorizontal className="h-4 w-4" /></DropdownMenuTrigger>
@@ -265,11 +273,11 @@ export default function Bugs() {
               <FilterMenu label="Severity" options={sevOpts} value={list('severity')} onChange={(v) => patch({ severity: v.join(',') })} />
               <FilterMenu label="Project" options={projectOpts} value={list('project_id')} onChange={(v) => patch({ project_id: v.join(',') })} />
               <FilterMenu label="Assignee" multi={false} options={assigneeOpts} value={list('assignee_id')} onChange={(v) => patch({ assignee_id: v[0] ?? '' })} />
-              {hasFilters && <button className="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => { setSearchText(''); setSp(groupByStatus ? { group: 'status' } : {}, { replace: true }); }}><X className="h-3 w-3" />Clear</button>}
+              {hasFilters && <button className="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => { setSearchText(''); setSp(sp.get('group') ? { group: sp.get('group')! } : { view: 'all' }, { replace: true }); }}><X className="h-3 w-3" />Clear</button>}
             </div>
             <div className="ml-auto flex items-center gap-1.5">
               <div className="w-28 md:hidden"><Select aria-label="Sort by" value={filters.orderby ?? 'updated_at'} onChange={(v) => patch({ orderby: v, order: 'desc' }, true)} options={SORTS} className="h-7 text-xs" /></div>
-              <Button variant={groupByStatus ? 'secondary' : 'ghost'} size="sm" onClick={() => patch({ group: groupByStatus ? '' : 'status' }, true)} aria-pressed={groupByStatus} title="Group by status"><Layers className="h-3.5 w-3.5" /><span className="hidden sm:inline">Group</span></Button>
+              <Button variant={groupByStatus ? 'secondary' : 'ghost'} size="sm" onClick={() => patch({ group: groupByStatus ? 'none' : 'status' }, true)} aria-pressed={groupByStatus} title="Group by status"><Layers className="h-3.5 w-3.5" /><span className="hidden sm:inline">Group</span></Button>
             </div>
           </div>
         )}
@@ -280,12 +288,12 @@ export default function Bugs() {
           <Th col="id" label="ID" className={cn('flex shrink-0', W.id)} />
           <Th col="status" label="Status" className={cn('shrink-0', W.status)} />
           <Th col="title" label="Title" className="flex min-w-0 flex-1 basis-0" />
-          <Th col="severity" label="Severity" className={cn('shrink-0', W.sev)} />
-          <Th col="project" label="Project" className={cn('shrink-0', W.proj)} />
-          <Th col="assignee" label="Assignee" className={cn('shrink-0 overflow-hidden', W.asg)} />
-          <Th col="reporter" label="By" className={cn('shrink-0', W.rep)} />
-          <Th col="created_at" label="Created" className={cn('shrink-0 !flex justify-end', W.created)} />
-          <Th col="updated_at" label="Updated" className={cn('shrink-0 !flex justify-end', W.upd)} />
+          {cols.severity && <Th col="severity" label="Severity" className={cn('shrink-0', W.sev)} />}
+          {cols.project && <Th col="project" label="Project" className={cn('shrink-0', W.proj)} />}
+          {cols.assignee && <Th col="assignee" label="Assignee" className={cn('shrink-0 overflow-hidden', W.asg)} />}
+          {cols.reporter && <Th col="reporter" label="By" className={cn('shrink-0', W.rep)} />}
+          {cols.created && <Th col="created_at" label="Created" className={cn('shrink-0 !flex justify-end', W.created)} />}
+          {cols.updated && <Th col="updated_at" label="Updated" className={cn('shrink-0 !flex justify-end', W.upd)} />}
           <div className="w-6 shrink-0" />
         </div>
       </div>
@@ -293,10 +301,10 @@ export default function Bugs() {
       {/* list */}
       <div role="table" aria-label="Bugs" className="min-h-[200px]">
         {q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} />
-          : q.isLoading ? Array.from({ length: 12 }).map((_, i) => <div key={i} className="flex h-[34px] items-center gap-3 border-b border-border/70 px-3"><div className="h-3 w-3 animate-pulse rounded bg-muted" /><div className="h-3 w-16 animate-pulse rounded bg-muted" /><div className="h-3 flex-1 animate-pulse rounded bg-muted" style={{ maxWidth: `${40 + ((i * 17) % 40)}%` }} /></div>)
+          : q.isLoading ? Array.from({ length: 12 }).map((_, i) => <div key={i} className="flex h-[var(--bt-row-h,34px)] items-center gap-3 border-b border-border/70 px-3"><div className="h-3 w-3 animate-pulse rounded bg-muted" /><div className="h-3 w-16 animate-pulse rounded bg-muted" /><div className="h-3 flex-1 animate-pulse rounded bg-muted" style={{ maxWidth: `${40 + ((i * 17) % 40)}%` }} /></div>)
           : items.length === 0 ? (
             <EmptyState title={hasFilters ? 'No bugs match these filters' : 'No bugs yet'} description={hasFilters ? 'Try removing a filter or switching view.' : 'Report the first bug to get started. Press C anywhere to create one.'}
-              action={hasFilters ? <Button variant="outline" size="sm" onClick={() => { setSearchText(''); setSp({}, { replace: true }); }}>Clear filters</Button> : can('create_bug') ? <Button size="sm" onClick={() => nav('/bugs/new')}><Plus className="h-3.5 w-3.5" />New bug</Button> : undefined} />
+              action={hasFilters ? <Button variant="outline" size="sm" onClick={() => { setSearchText(''); setSp({ view: 'all' }, { replace: true }); }}>Clear filters</Button> : can('create_bug') ? <Button size="sm" onClick={() => nav('/bugs/new')}><Plus className="h-3.5 w-3.5" />New bug</Button> : undefined} />
           ) : groups ? groups.map(({ s, rows }) => (
             <div key={s.slug}>
               <button className="flex h-7 w-full items-center gap-2 border-b border-border/70 bg-muted/50 px-3 text-xs font-medium hover:bg-muted" onClick={() => setCollapsed((c) => { const n = new Set(c); n.has(s.slug) ? n.delete(s.slug) : n.add(s.slug); return n; })} aria-expanded={!collapsed.has(s.slug)}>

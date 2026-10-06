@@ -26,7 +26,7 @@ export interface Paged<T> { items: T[]; total: number; page: number; total_pages
 export interface ProjectStats { total: number; open: number; in_progress: number; resolved: number; closed: number }
 export interface ProjectMember { user: UserRef; role: 'member' | 'maintainer' }
 export interface Project {
-  id: number; name: string; key: string; description: string; color: string; status: 'active' | 'archived';
+  id: number; name: string; key: string; description: string; color: string; status: 'active' | 'archived'; is_favorite: boolean;
   lead: UserRef | null; members: ProjectMember[]; stats: ProjectStats; created_at: string; updated_at: string;
 }
 
@@ -43,12 +43,18 @@ export interface Notification {
 export type StatusCategory = 'open' | 'in_progress' | 'resolved' | 'closed';
 export interface StatusDef { slug: string; label: string; color: string; category: StatusCategory }
 export interface OptionDef { slug: string; label: string; color: string }
+export interface UiSettings {
+  app_name: string; theme: 'system' | 'light' | 'dark'; density: 'compact' | 'comfortable'; accent: string;
+  sidebar_collapsed: boolean; default_view: 'all' | 'active' | 'mine'; group_by_status: boolean;
+  columns: { severity: boolean; project: boolean; assignee: boolean; reporter: boolean; created: boolean; updated: boolean };
+}
 export interface RolePermissions { slug: string; name: string; locked: boolean; caps: Record<string, boolean> }
 export interface Settings {
   statuses: StatusDef[]; priorities: OptionDef[]; severities: OptionDef[];
   notifications: { assignment: boolean; status: boolean; comment: boolean; mention: boolean; resolution: boolean; email: boolean };
   project: { default_assignee: 'none' | 'project_lead'; restrict_to_members: boolean; max_attachment_mb: number; per_page: number };
   uninstall?: { delete_data: boolean };
+  ui: UiSettings;
   limits: { server_max_upload_mb: number };
   permissions?: { capabilities: { cap: string; label: string }[]; roles: RolePermissions[] };
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FolderKanban, Plus, Search } from 'lucide-react';
+import { FolderKanban, Plus, Search, Star } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/ui/states';
 import { ProjectDialog } from '@/components/ProjectDialog';
 import { LabelChip } from '@/components/badges';
+import { StarButton } from '@/components/StarButton';
 import { useApp } from '@/store/app';
 import { useProjects } from '@/hooks/useData';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -19,7 +20,9 @@ export default function Projects() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('active');
   const [open, setOpen] = useState(false);
+  const [onlyStarred, setOnlyStarred] = useState(false);
   const q = useProjects({ search: useDebounce(search), status });
+  const rows = [...(q.data ?? [])].filter((p) => !onlyStarred || p.is_favorite).sort((a, b) => Number(b.is_favorite) - Number(a.is_favorite));
   const manage = can('manage_projects');
 
   return (
@@ -29,19 +32,21 @@ export default function Projects() {
         <div className="relative"><Search className="pointer-events-none absolute left-2 top-[7px] h-3.5 w-3.5 text-muted-foreground" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Filter projects" aria-label="Search projects" className="h-7 w-52 rounded-md border border-input bg-background pl-7 pr-2 text-xs focus:border-ring focus:ring-2 focus:ring-ring/25" /></div>
         <div className="w-32"><Select aria-label="Project status" value={status} onChange={setStatus} options={[{ value: 'active', label: 'Active' }, { value: 'archived', label: 'Archived' }]} emptyLabel="All" className="h-7 text-xs" /></div>
+        <button aria-pressed={onlyStarred} onClick={() => setOnlyStarred((v) => !v)} className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-xs font-medium transition-colors ${onlyStarred ? 'border-amber-400/60 bg-amber-400/10 text-amber-600 dark:text-amber-400' : 'border-dashed border-input text-muted-foreground hover:bg-accent hover:text-foreground'}`}><Star className={`h-3 w-3 ${onlyStarred ? 'fill-current' : ''}`} />Starred</button>
       </div>
       <div className="hidden h-7 items-center gap-3 border-b border-border/70 bg-muted/40 px-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground md:flex">
-        <span className="flex-1">Project</span><span className="w-24">Lead</span><span className="w-24">Members</span><span className="w-56">Progress</span><span className="w-14 text-right">Active</span><span className="w-14 text-right">Total</span>
+        <span className="w-5" /><span className="flex-1">Project</span><span className="w-24">Lead</span><span className="w-24">Members</span><span className="w-56">Progress</span><span className="w-14 text-right">Active</span><span className="w-14 text-right">Total</span>
       </div>
       {q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} />
         : q.isLoading ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="m-2 h-8" />)
-        : q.data && q.data.length === 0 ? <EmptyState icon={<FolderKanban className="h-5 w-5" />} title="No projects found" description={manage ? 'Create a project to start tracking bugs.' : 'You are not a member of any project yet. Ask a project manager to add you.'} action={manage ? <Button size="sm" onClick={() => setOpen(true)}><Plus className="h-3.5 w-3.5" />New project</Button> : undefined} />
-        : q.data?.map((p) => {
+        : rows.length === 0 ? <EmptyState icon={<FolderKanban className="h-5 w-5" />} title={onlyStarred ? 'No starred projects' : 'No projects found'} description={onlyStarred ? 'Click the star next to a project to pin it here and in the sidebar.' : manage ? 'Create a project to start tracking bugs.' : 'You are not a member of any project yet. Ask a project manager to add you.'} action={manage ? <Button size="sm" onClick={() => setOpen(true)}><Plus className="h-3.5 w-3.5" />New project</Button> : undefined} />
+        : rows.map((p) => {
           const done = p.stats.resolved + p.stats.closed;
           const pct = p.stats.total ? Math.round((done / p.stats.total) * 100) : 0;
           return (
             <div key={p.id} role="link" tabIndex={0} onClick={() => nav(`/projects/${p.id}`)} onKeyDown={(e) => e.key === 'Enter' && nav(`/projects/${p.id}`)}
               className="flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 border-b border-border/70 px-3 py-2 hover:bg-muted/60 md:h-11 md:flex-nowrap md:py-0">
+              <StarButton project={p} />
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: p.color }} />
                 <Link to={`/projects/${p.id}`} className="truncate font-medium hover:text-primary">{p.name}</Link>

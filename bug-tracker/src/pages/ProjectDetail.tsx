@@ -16,6 +16,7 @@ import { EmptyState, ErrorState } from '@/components/ui/states';
 import { useToast } from '@/components/ui/toast';
 import { useConfirm } from '@/components/ui/confirm';
 import { ProjectDialog } from '@/components/ProjectDialog';
+import { StarButton } from '@/components/StarButton';
 import { PriorityBadge, StatusBadge, UserChip } from '@/components/badges';
 import { CategoryBars } from '@/components/charts';
 import { useApp } from '@/store/app';
@@ -66,6 +67,7 @@ export default function ProjectDetail() {
         title={<span className="inline-flex items-center gap-2"><span className="h-3.5 w-3.5 rounded" style={{ background: p.color }} />{p.name}{p.key && <Badge>{p.key}</Badge>}{p.status === 'archived' && <Badge>Archived</Badge>}</span>}
         description={p.description}
         actions={<>
+          <StarButton project={p} size={16} className="p-1.5" />
           {can('create_bug') && <Button asChild variant="outline"><Link to={`/bugs/new?project_id=${p.id}`}><Plus className="h-4 w-4" />New bug</Link></Button>}
           {manage && <><Button variant="outline" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" />Edit</Button><Button variant="outline" className="text-destructive" onClick={onDelete}><Trash2 className="h-4 w-4" />Delete</Button></>}
         </>}

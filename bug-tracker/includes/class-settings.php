@@ -46,6 +46,16 @@ class BT_Settings {
 				'per_page'            => 50,
 			),
 			'uninstall'     => array( 'delete_data' => false ),
+			'ui'            => array(
+				'app_name'          => '',
+				'theme'             => 'system', // system|light|dark
+				'density'           => 'compact', // compact|comfortable
+				'accent'            => '#4f46e5',
+				'sidebar_collapsed' => false,
+				'default_view'      => 'all', // all|active|mine
+				'group_by_status'   => false,
+				'columns'           => array( 'severity' => true, 'project' => true, 'assignee' => true, 'reporter' => true, 'created' => true, 'updated' => true ),
+			),
 		);
 	}
 
@@ -63,6 +73,8 @@ class BT_Settings {
 		foreach ( array( 'notifications', 'project', 'uninstall' ) as $k ) {
 			$saved[ $k ] = array_merge( $d[ $k ], isset( $saved[ $k ] ) && is_array( $saved[ $k ] ) ? $saved[ $k ] : array() );
 		}
+		$saved['ui']            = array_merge( $d['ui'], isset( $saved['ui'] ) && is_array( $saved['ui'] ) ? $saved['ui'] : array() );
+		$saved['ui']['columns'] = array_merge( $d['ui']['columns'], is_array( $saved['ui']['columns'] ) ? $saved['ui']['columns'] : array() );
 		return $saved;
 	}
 
@@ -194,6 +206,37 @@ class BT_Settings {
 			}
 			if ( isset( $p['per_page'] ) ) {
 				$out['project']['per_page'] = max( 5, min( 100, (int) $p['per_page'] ) );
+			}
+		}
+
+		if ( isset( $in['ui'] ) && is_array( $in['ui'] ) ) {
+			$u = $in['ui'];
+			if ( isset( $u['app_name'] ) ) {
+				$out['ui']['app_name'] = mb_substr( sanitize_text_field( $u['app_name'] ), 0, 40 );
+			}
+			if ( isset( $u['theme'] ) && in_array( $u['theme'], array( 'system', 'light', 'dark' ), true ) ) {
+				$out['ui']['theme'] = $u['theme'];
+			}
+			if ( isset( $u['density'] ) && in_array( $u['density'], array( 'compact', 'comfortable' ), true ) ) {
+				$out['ui']['density'] = $u['density'];
+			}
+			if ( isset( $u['accent'] ) && sanitize_hex_color( $u['accent'] ) ) {
+				$out['ui']['accent'] = sanitize_hex_color( $u['accent'] );
+			}
+			if ( isset( $u['default_view'] ) && in_array( $u['default_view'], array( 'all', 'active', 'mine' ), true ) ) {
+				$out['ui']['default_view'] = $u['default_view'];
+			}
+			foreach ( array( 'sidebar_collapsed', 'group_by_status' ) as $k ) {
+				if ( isset( $u[ $k ] ) ) {
+					$out['ui'][ $k ] = (bool) rest_sanitize_boolean( $u[ $k ] );
+				}
+			}
+			if ( isset( $u['columns'] ) && is_array( $u['columns'] ) ) {
+				foreach ( array_keys( $cur['ui']['columns'] ) as $c ) {
+					if ( isset( $u['columns'][ $c ] ) ) {
+						$out['ui']['columns'][ $c ] = (bool) rest_sanitize_boolean( $u['columns'][ $c ] );
+					}
+				}
 			}
 		}
 

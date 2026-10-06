@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, ExternalLink, LogOut, Menu, Moon, Plus, Search, Sun } from 'lucide-react';
+import { Bell, ExternalLink, LogOut, Menu, Moon, PanelLeft, Plus, Search, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -10,7 +10,7 @@ import { useUnreadCount } from '@/hooks/useData';
 import { useHeaderSlots } from './HeaderSlots';
 
 export function Topbar({ searchRef }: { searchRef: React.RefObject<HTMLInputElement> }) {
-  const { theme, toggleTheme, setSidebarOpen, user, can } = useApp();
+  const { theme, toggleTheme, setSidebarOpen, user, can, collapsed, toggleCollapsed } = useApp();
   const { setLeft, setRight } = useHeaderSlots();
   const nav = useNavigate();
   const unread = useUnreadCount();
@@ -25,6 +25,7 @@ export function Topbar({ searchRef }: { searchRef: React.RefObject<HTMLInputElem
   return (
     <header className="sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-3 backdrop-blur">
       <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open menu"><Menu className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="icon-sm" className="hidden lg:inline-flex" onClick={toggleCollapsed} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-pressed={collapsed} title={collapsed ? 'Expand sidebar' : 'Collapse to icons'}><PanelLeft className="h-4 w-4" /></Button>
       <div ref={setLeft} className="min-w-0 flex-1" />
       <div ref={setRight} className="flex shrink-0 items-center" />
       <form ref={form} onSubmit={submit} className="relative hidden md:block" role="search">

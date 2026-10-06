@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/ui/states';
 import { useToast } from '@/components/ui/toast';
 import { useApp } from '@/store/app';
+import { ACCENTS } from '@/utils/color';
+import { cn } from '@/utils/cn';
 
 type Item = OptionDef & Partial<Pick<StatusDef, 'category'>>;
 const CATS: { value: StatusCategory; label: string }[] = [{ value: 'open', label: 'Open' }, { value: 'in_progress', label: 'In progress' }, { value: 'resolved', label: 'Resolved' }, { value: 'closed', label: 'Closed' }];
@@ -69,6 +71,7 @@ export default function Settings() {
   const manageUsers = can('manage_bug_tracker_users') && !!draft.permissions;
   const dirty = JSON.stringify(draft) !== JSON.stringify(settings);
   const patch = (p: Partial<S>) => setDraft({ ...draft, ...p });
+  const patchUi = (p: Partial<S['ui']>) => setDraft({ ...draft, ui: { ...draft.ui, ...p } });
   const validate = () => {
     for (const k of ['statuses', 'priorities', 'severities'] as const) if (draft[k].some((i) => !i.label.trim())) { toast.error('Every item needs a label', `Check the ${k} tab.`); return false; }
     return true;
@@ -81,7 +84,7 @@ export default function Settings() {
         actions={<><Button variant="outline" disabled={!dirty} onClick={() => setDraft(structuredClone(settings))}>Reset</Button><Button disabled={!dirty} loading={save.isPending} onClick={submit}>Save settings</Button></>} />
       <Tabs defaultValue={manage ? 'statuses' : 'permissions'}>
         <TabsList>
-          {manage && <><TabsTrigger value="statuses">Statuses</TabsTrigger><TabsTrigger value="priorities">Priorities</TabsTrigger><TabsTrigger value="severities">Severities</TabsTrigger><TabsTrigger value="project">Projects</TabsTrigger><TabsTrigger value="notifications">Notifications</TabsTrigger></>}
+          {manage && <><TabsTrigger value="statuses">Statuses</TabsTrigger><TabsTrigger value="priorities">Priorities</TabsTrigger><TabsTrigger value="severities">Severities</TabsTrigger><TabsTrigger value="project">Projects</TabsTrigger><TabsTrigger value="notifications">Notifications</TabsTrigger><TabsTrigger value="appearance">Appearance</TabsTrigger></>}
           {manageUsers && <TabsTrigger value="permissions">User permissions</TabsTrigger>}
         </TabsList>
         {manage && <>
@@ -102,6 +105,49 @@ export default function Settings() {
               </div>
               <div className="border-t border-border pt-2"><Toggle label="Delete all data when the plugin is uninstalled" description="Removes tables, settings and uploaded files when the plugin is deleted from the Plugins page." checked={!!draft.uninstall?.delete_data} onChange={(v) => patch({ uninstall: { delete_data: v } })} /></div>
             </CardContent></Card>
+          </TabsContent>
+          <TabsContent value="appearance">
+            <Card><CardHeader><CardTitle>Appearance &amp; layout</CardTitle><CardDescription>Defaults for everyone. People can still pick their own theme and collapse the sidebar for themselves.</CardDescription></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div><label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="ui-name">App name</label>
+                    <Input id="ui-name" maxLength={40} placeholder="Defaults to the site name" value={draft.ui.app_name} onChange={(e) => patchUi({ app_name: e.target.value })} /></div>
+                  <div><label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="ui-theme">Default theme</label>
+                    <Select id="ui-theme" value={draft.ui.theme} onChange={(v) => patchUi({ theme: v as S['ui']['theme'] })} options={[{ value: 'system', label: 'Match system' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} /></div>
+                  <div><label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="ui-density">Density</label>
+                    <Select id="ui-density" value={draft.ui.density} onChange={(v) => patchUi({ density: v as S['ui']['density'] })} options={[{ value: 'compact', label: 'Compact (34px rows)' }, { value: 'comfortable', label: 'Comfortable (42px rows)' }]} /></div>
+                </div>
+                <div>
+                  <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Accent colour</span>
+                  <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Accent colour">
+                    {ACCENTS.map((a) => (
+                      <button key={a.value} type="button" role="radio" aria-checked={draft.ui.accent.toLowerCase() === a.value} aria-label={a.name} title={a.name} onClick={() => patchUi({ accent: a.value })}
+                        className={cn('h-6 w-6 rounded-full ring-offset-2 ring-offset-card transition', draft.ui.accent.toLowerCase() === a.value ? 'ring-2 ring-foreground' : 'hover:ring-2 hover:ring-border')} style={{ background: a.value }} />
+                    ))}
+                    <input type="color" aria-label="Custom accent colour" value={draft.ui.accent} onChange={(e) => patchUi({ accent: e.target.value })} className="h-7 w-9 cursor-pointer rounded border border-input bg-background p-0.5" />
+                    <span className="text-xs tabular-nums text-muted-foreground">{draft.ui.accent}</span>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div><label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="ui-view">Default bugs view</label>
+                    <Select id="ui-view" value={draft.ui.default_view} onChange={(v) => patchUi({ default_view: v as S['ui']['default_view'] })} options={[{ value: 'all', label: 'All bugs' }, { value: 'active', label: 'Active (open + in progress)' }, { value: 'mine', label: 'Assigned to me' }]} /></div>
+                </div>
+                <div className="divide-y divide-border">
+                  <Toggle label="Group the bug list by status" description="Default for the Bugs screen; each person can toggle it." checked={draft.ui.group_by_status} onChange={(v) => patchUi({ group_by_status: v })} />
+                  <Toggle label="Start with the sidebar collapsed to icons" description="Default for new visitors; the burger button in the top bar toggles it." checked={draft.ui.sidebar_collapsed} onChange={(v) => patchUi({ sidebar_collapsed: v })} />
+                </div>
+                <div>
+                  <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Columns in the bug list</span>
+                  <div className="flex flex-wrap gap-x-5 gap-y-2">
+                    {(Object.keys(draft.ui.columns) as (keyof S['ui']['columns'])[]).map((k) => (
+                      <label key={k} className="flex cursor-pointer items-center gap-2 text-[13px] capitalize">
+                        <Checkbox checked={draft.ui.columns[k]} onCheckedChange={(v) => patchUi({ columns: { ...draft.ui.columns, [k]: v === true } })} />{k}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">ID, status, priority and title are always shown. Small screens hide secondary columns automatically.</p>
+                </div>
+              </CardContent></Card>
           </TabsContent>
           <TabsContent value="notifications">
             <Card><CardHeader><CardTitle>Notification settings</CardTitle><CardDescription>Choose which events notify users inside the Bug Tracker.</CardDescription></CardHeader><CardContent className="divide-y divide-border">

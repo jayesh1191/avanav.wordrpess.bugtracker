@@ -30,7 +30,7 @@ export default function Dashboard() {
   const first = (cat: StatusCategory) => settings?.statuses.find((s) => s.category === cat);
   const topPriority = settings?.priorities[settings.priorities.length - 1]?.slug ?? 'critical';
   const kpis: { label: string; value: number; to: string; icon?: React.ReactNode; tone?: string }[] = [
-    { label: 'Total', value: t.total, to: '/bugs' },
+    { label: 'Total', value: t.total, to: '/bugs?view=all' },
     { label: 'Open', value: t.open, to: `/bugs?status=${first('open')?.slug ?? ''}`, icon: <StatusIcon category="open" color={first('open')?.color ?? '#3b82f6'} /> },
     { label: 'In progress', value: t.in_progress, to: `/bugs?status=${first('in_progress')?.slug ?? ''}`, icon: <StatusIcon category="in_progress" color={first('in_progress')?.color ?? '#f59e0b'} /> },
     { label: 'Resolved', value: t.resolved, to: `/bugs?status=${first('resolved')?.slug ?? ''}`, icon: <StatusIcon category="resolved" color={first('resolved')?.color ?? '#10b981'} /> },

@@ -46,10 +46,34 @@ class BT_Projects_Controller {
 		return $out;
 	}
 
+	const FAVORITES_META = 'bug_tracker_favorite_projects';
+
+	public static function favorites( $user_id = 0 ) {
+		$f = get_user_meta( $user_id ? $user_id : get_current_user_id(), self::FAVORITES_META, true );
+		return is_array( $f ) ? array_map( 'intval', $f ) : array();
+	}
+
+	/** PUT /projects/{id}/favorite  { favorite: bool } – per-user star. */
+	public function favorite( WP_REST_Request $r ) {
+		$p = $this->find( $r['id'] );
+		if ( is_wp_error( $p ) ) {
+			return $p;
+		}
+		$favs = self::favorites();
+		$on   = null === $r->get_param( 'favorite' ) ? ! in_array( (int) $p->id, $favs, true ) : (bool) rest_sanitize_boolean( $r->get_param( 'favorite' ) );
+		$favs = array_values( array_diff( $favs, array( (int) $p->id ) ) );
+		if ( $on ) {
+			$favs[] = (int) $p->id;
+		}
+		update_user_meta( get_current_user_id(), self::FAVORITES_META, $favs );
+		return rest_ensure_response( $this->format_many( array( $p ) )[0] );
+	}
+
 	private function format_many( array $rows ) {
 		$ids     = array_map( 'intval', wp_list_pluck( $rows, 'id' ) );
 		$stats   = $this->stats_for( $ids );
 		$members = $this->members_for( $ids );
+		$favs    = self::favorites();
 		$out     = array();
 		foreach ( $rows as $p ) {
 			$out[] = array(
@@ -59,6 +83,7 @@ class BT_Projects_Controller {
 				'description' => (string) $p->description,
 				'color'       => $p->color,
 				'status'      => $p->status,
+				'is_favorite' => in_array( (int) $p->id, $favs, true ),
 				'lead'        => BT_Helpers::user( $p->lead_id ),
 				'members'     => $members[ (int) $p->id ],
 				'stats'       => $stats[ (int) $p->id ],

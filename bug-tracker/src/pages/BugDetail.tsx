@@ -54,8 +54,8 @@ function Timeline({ bug }: { bug: Bug }) {
   const confirm = useConfirm();
   const qc = useQueryClient();
   const invalidate = useInvalidateBugs();
-  const comments = useQuery({ queryKey: ['comments', bug.id], queryFn: () => BugsApi.comments(bug.id) });
-  const activity = useQuery({ queryKey: ['activity', bug.id], queryFn: () => BugsApi.activity(bug.id) });
+  const comments = useQuery({ queryKey: ['comments', bug.id], queryFn: () => BugsApi.comments(bug.id), staleTime: 0, refetchOnMount: 'always' });
+  const activity = useQuery({ queryKey: ['activity', bug.id], queryFn: () => BugsApi.activity(bug.id), staleTime: 0, refetchOnMount: 'always' });
   const { register, handleSubmit, reset, formState: { errors } } = useForm<{ content: string }>({ resolver: zodResolver(commentSchema), defaultValues: { content: '' } });
   const add = useMutation({
     mutationFn: (v: { content: string }) => BugsApi.addComment(bug.id, v.content),

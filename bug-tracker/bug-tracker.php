@@ -24,12 +24,14 @@ require_once BUG_TRACKER_PATH . 'includes/class-settings.php';
 require_once BUG_TRACKER_PATH . 'includes/class-permissions.php';
 require_once BUG_TRACKER_PATH . 'includes/class-helpers.php';
 require_once BUG_TRACKER_PATH . 'includes/class-notifications.php';
+require_once BUG_TRACKER_PATH . 'includes/class-demo-data.php';
 require_once BUG_TRACKER_PATH . 'includes/rest/class-bugs-controller.php';
 require_once BUG_TRACKER_PATH . 'includes/rest/class-projects-controller.php';
 require_once BUG_TRACKER_PATH . 'includes/rest/class-misc-controller.php';
 require_once BUG_TRACKER_PATH . 'includes/class-rest-api.php';
 require_once BUG_TRACKER_PATH . 'includes/class-app-page.php';
 require_once BUG_TRACKER_PATH . 'admin/class-admin-page.php';
+require_once BUG_TRACKER_PATH . 'admin/class-settings-page.php';
 require_once BUG_TRACKER_PATH . 'includes/class-plugin.php';
 
 register_activation_hook( __FILE__, array( 'BT_Plugin', 'activate' ) );
