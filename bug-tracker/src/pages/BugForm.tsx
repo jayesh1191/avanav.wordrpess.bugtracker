@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { BugsApi } from '@/api/endpoints';
 import { ApiError } from '@/api/client';
 import type { Attachment, BugDetail } from '@/types';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageBody, PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/input';
@@ -112,18 +112,18 @@ function BugFormInner({ bug }: { bug?: BugDetail }) {
   const projectOpts = (projects.data ?? []).filter((p) => p.status === 'active' || String(p.id) === projectId).map((p) => ({ value: String(p.id), label: p.name }));
 
   return (
-    <form onSubmit={onSubmit} noValidate>
+    <form id="bug-form" onSubmit={onSubmit} noValidate>
       <PageHeader
         title={bug ? `Edit bug #${bug.id}` : 'Report a bug'}
         crumbs={bug ? [{ label: 'Bugs', to: '/bugs' }, { label: `#${bug.id}`, to: `/bugs/${bug.id}` }, { label: 'Edit' }] : [{ label: 'Bugs', to: '/bugs' }, { label: 'New bug' }]}
         actions={<>
-          <Button type="button" variant="outline" onClick={async () => { if (isDirty && !(await confirm({ title: 'Discard changes?', description: 'Your unsaved changes will be lost.', confirmLabel: 'Discard', destructive: true }))) return; nav(bug ? `/bugs/${bug.id}` : '/bugs'); }}>Cancel</Button>
-          <Button type="submit" loading={submitting}>{bug ? 'Save changes' : 'Create bug'}</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={async () => { if (isDirty && !(await confirm({ title: 'Discard changes?', description: 'Your unsaved changes will be lost.', confirmLabel: 'Discard', destructive: true }))) return; nav(bug ? `/bugs/${bug.id}` : '/bugs'); }}>Cancel</Button>
+          <Button type="submit" form="bug-form" size="sm" loading={submitting}>{bug ? 'Save changes' : 'Create bug'}</Button>
         </>}
       />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <Card><CardContent className="space-y-4 pt-5">
+      <PageBody className="max-w-[1100px]"><div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="space-y-3">
+          <Card><CardContent className="space-y-3 pt-3.5">
             <Field label="Title *" htmlFor="title" error={err('title')}><Input id="title" maxLength={255} placeholder="Short, specific summary" aria-invalid={!!errors.title} {...register('title')} /></Field>
             <Field label="Description" htmlFor="description" error={err('description')}><Textarea id="description" rows={5} placeholder="What is going wrong?" {...register('description')} /></Field>
             <Field label="Steps to reproduce" htmlFor="steps" error={err('steps_to_reproduce')}><Textarea id="steps" rows={4} placeholder={'1. Go to…\n2. Click…'} {...register('steps_to_reproduce')} /></Field>
@@ -146,7 +146,7 @@ function BugFormInner({ bug }: { bug?: BugDetail }) {
           </Card>
         </div>
 
-        <Card className="h-fit"><CardContent className="space-y-4 pt-5">
+        <Card className="h-fit"><CardContent className="space-y-3 pt-3.5">
           <Field label="Project *" htmlFor="project" error={err('project_id')}>
             <Controller control={control} name="project_id" render={({ field }) => (
               <Select id="project" value={field.value} onChange={field.onChange} options={projectOpts} placeholder={projects.isLoading ? 'Loading…' : 'Select project'} invalid={!!errors.project_id} />
@@ -173,7 +173,7 @@ function BugFormInner({ bug }: { bug?: BugDetail }) {
           </div>
           <Field label="Due date" htmlFor="due" error={err('due_date')}><Input id="due" type="date" {...register('due_date')} /></Field>
         </CardContent></Card>
-      </div>
+      </div></PageBody>
     </form>
   );
 }
@@ -185,10 +185,10 @@ export default function BugForm() {
   const q = useBug(bugId);
 
   if (!can('create_bug') && !bugId) return <EmptyState title="You can't report bugs" description="Your role does not include the create_bug capability." />;
-  if (!settings) return <Skeleton className="h-96" />;
+  if (!settings) return <PageBody><Skeleton className="h-96" /></PageBody>;
   if (bugId) {
-    if (q.isError) return <Card><ErrorState error={q.error} onRetry={() => q.refetch()} /></Card>;
-    if (q.isLoading || !q.data) return <Skeleton className="h-96" />;
+    if (q.isError) return <PageBody><Card><ErrorState error={q.error} onRetry={() => q.refetch()} /></Card></PageBody>;
+    if (q.isLoading || !q.data) return <PageBody><Skeleton className="h-96" /></PageBody>;
     if (!q.data.can_edit) return <Card><EmptyState title="You can't edit this bug" description="You don't have permission to edit it." /></Card>;
     return <BugFormInner key={q.data.updated_at} bug={q.data} />;
   }

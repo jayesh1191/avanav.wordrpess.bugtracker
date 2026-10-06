@@ -6,6 +6,15 @@ export default {
   darkMode: ['selector', '.bt-dark'],
   corePlugins: { preflight: false },
   theme: {
+    fontSize: {
+      '2xs': ['10.5px', '14px'],
+      xs: ['11.5px', '16px'],
+      sm: ['12.5px', '18px'],
+      base: ['13px', '20px'],
+      lg: ['15px', '22px'],
+      xl: ['17px', '24px'],
+      '2xl': ['20px', '28px'],
+    },
     extend: {
       colors: {
         border: 'hsl(var(--bt-border))',
@@ -18,10 +27,14 @@ export default {
         muted: { DEFAULT: 'hsl(var(--bt-muted))', foreground: 'hsl(var(--bt-muted-foreground))' },
         accent: { DEFAULT: 'hsl(var(--bt-accent))', foreground: 'hsl(var(--bt-accent-foreground))' },
         destructive: { DEFAULT: 'hsl(var(--bt-destructive))', foreground: 'hsl(var(--bt-destructive-foreground))' },
+        sidebar: 'hsl(var(--bt-sidebar))',
+        success: 'hsl(var(--bt-success))',
+        warning: 'hsl(var(--bt-warning))',
+        info: 'hsl(var(--bt-info))',
         card: { DEFAULT: 'hsl(var(--bt-card))', foreground: 'hsl(var(--bt-card-foreground))' },
         popover: { DEFAULT: 'hsl(var(--bt-popover))', foreground: 'hsl(var(--bt-popover-foreground))' },
       },
-      borderRadius: { lg: '0.625rem', md: '0.5rem', sm: '0.375rem' },
+      borderRadius: { lg: '8px', md: '6px', sm: '4px' },
       keyframes: {
         'bt-fade': { from: { opacity: '0' }, to: { opacity: '1' } },
         'bt-pop': { from: { opacity: '0', transform: 'translate(-50%,-48%) scale(.97)' }, to: { opacity: '1', transform: 'translate(-50%,-50%) scale(1)' } },

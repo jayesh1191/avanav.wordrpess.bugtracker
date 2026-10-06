@@ -1,50 +1,59 @@
 @tailwind base;
 @tailwind utilities;
 
-/* ---- Theme tokens (scoped) ------------------------------------------ */
+/* ---- Theme tokens (scoped) ------------------------------------------
+   Neutral zinc base, one restrained indigo accent, semantic colours for state. */
 #bug-tracker-root {
-  --bt-background: 220 20% 97%;
-  --bt-foreground: 224 30% 12%;
+  --bt-background: 0 0% 100%;
+  --bt-foreground: 240 10% 10%;
+  --bt-sidebar: 240 5% 97%;
   --bt-card: 0 0% 100%;
-  --bt-card-foreground: 224 30% 12%;
+  --bt-card-foreground: 240 10% 10%;
   --bt-popover: 0 0% 100%;
-  --bt-popover-foreground: 224 30% 12%;
-  --bt-primary: 243 75% 59%;
+  --bt-popover-foreground: 240 10% 10%;
+  --bt-primary: 243 75% 56%;
   --bt-primary-foreground: 0 0% 100%;
-  --bt-secondary: 220 16% 93%;
-  --bt-secondary-foreground: 224 30% 20%;
-  --bt-muted: 220 16% 94%;
-  --bt-muted-foreground: 220 9% 40%;
-  --bt-accent: 226 70% 95%;
-  --bt-accent-foreground: 243 60% 40%;
-  --bt-destructive: 0 72% 51%;
+  --bt-secondary: 240 5% 95%;
+  --bt-secondary-foreground: 240 6% 20%;
+  --bt-muted: 240 5% 96%;
+  --bt-muted-foreground: 240 4% 42%;
+  --bt-accent: 240 5% 93%;
+  --bt-accent-foreground: 240 10% 10%;
+  --bt-destructive: 0 72% 50%;
   --bt-destructive-foreground: 0 0% 100%;
-  --bt-border: 220 14% 89%;
-  --bt-input: 220 14% 85%;
-  --bt-ring: 243 75% 59%;
-  --bt-chart-grid: 220 14% 88%;
+  --bt-success: 152 60% 36%;
+  --bt-warning: 32 92% 44%;
+  --bt-info: 217 80% 52%;
+  --bt-border: 240 6% 90%;
+  --bt-input: 240 6% 82%;
+  --bt-ring: 243 75% 56%;
+  --bt-chart-grid: 240 6% 91%;
 }
 #bug-tracker-root.bt-dark {
-  --bt-background: 226 28% 9%;
-  --bt-foreground: 220 20% 94%;
-  --bt-card: 226 25% 12%;
-  --bt-card-foreground: 220 20% 94%;
-  --bt-popover: 226 25% 13%;
-  --bt-popover-foreground: 220 20% 94%;
-  --bt-primary: 238 85% 70%;
-  --bt-primary-foreground: 226 40% 8%;
-  --bt-secondary: 226 18% 18%;
-  --bt-secondary-foreground: 220 20% 90%;
-  --bt-muted: 226 18% 16%;
-  --bt-muted-foreground: 220 12% 66%;
-  --bt-accent: 232 30% 20%;
-  --bt-accent-foreground: 230 80% 85%;
-  --bt-destructive: 0 70% 56%;
+  --bt-background: 240 6% 8%;
+  --bt-foreground: 240 6% 92%;
+  --bt-sidebar: 240 6% 6%;
+  --bt-card: 240 6% 10%;
+  --bt-card-foreground: 240 6% 92%;
+  --bt-popover: 240 6% 11%;
+  --bt-popover-foreground: 240 6% 92%;
+  --bt-primary: 240 90% 72%;
+  --bt-primary-foreground: 240 30% 8%;
+  --bt-secondary: 240 5% 15%;
+  --bt-secondary-foreground: 240 6% 88%;
+  --bt-muted: 240 5% 13%;
+  --bt-muted-foreground: 240 5% 62%;
+  --bt-accent: 240 5% 17%;
+  --bt-accent-foreground: 240 6% 94%;
+  --bt-destructive: 0 70% 58%;
   --bt-destructive-foreground: 0 0% 100%;
-  --bt-border: 226 16% 21%;
-  --bt-input: 226 16% 26%;
-  --bt-ring: 238 85% 70%;
-  --bt-chart-grid: 226 16% 22%;
+  --bt-success: 152 55% 50%;
+  --bt-warning: 36 90% 56%;
+  --bt-info: 217 85% 66%;
+  --bt-border: 240 4% 18%;
+  --bt-input: 240 4% 26%;
+  --bt-ring: 240 90% 72%;
+  --bt-chart-grid: 240 4% 18%;
   color-scheme: dark;
 }
 
@@ -59,9 +68,10 @@
   border-color: hsl(var(--bt-border));
 }
 #bug-tracker-root {
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 14px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
   line-height: 1.5;
+  font-feature-settings: 'cv11', 'ss01';
   color: hsl(var(--bt-foreground));
   background: hsl(var(--bt-background));
   min-height: 100vh;
@@ -92,7 +102,7 @@
 #bug-tracker-root input[type='checkbox'], #bug-tracker-root input[type='radio'] { box-shadow: none; }
 
 /* Scrollbars */
-#bug-tracker-root ::-webkit-scrollbar { width: 10px; height: 10px; }
+#bug-tracker-root ::-webkit-scrollbar { width: 8px; height: 8px; }
 #bug-tracker-root ::-webkit-scrollbar-thumb { background: hsl(var(--bt-border)); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
 @media (prefers-reduced-motion: reduce) { #bug-tracker-root * { animation: none !important; transition: none !important; } }
 

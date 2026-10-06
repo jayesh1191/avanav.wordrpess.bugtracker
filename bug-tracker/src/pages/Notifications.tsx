@@ -50,9 +50,9 @@ export default function Notifications() {
               const Icon = ICONS[n.type] ?? Bell;
               return (
                 <li key={n.id}>
-                  <button className={cn('flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-muted/50', !n.is_read && 'bg-accent/30')}
+                  <button className={cn('flex w-full items-start gap-3 px-3.5 py-2 text-left hover:bg-muted/50', !n.is_read && 'bg-accent/30')}
                     onClick={() => { if (!n.is_read) read.mutate(n.id); if (n.bug_id) nav(`/bugs/${n.bug_id}`); }}>
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground"><Icon className="h-4 w-4" /></span>
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground"><Icon className="h-3.5 w-3.5" /></span>
                     <span className="min-w-0 flex-1"><span className={cn('block text-sm break-words', !n.is_read && 'font-medium')}>{n.message}</span><span className="text-xs text-muted-foreground">{timeAgo(n.created_at)}</span></span>
                     {!n.is_read && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
                   </button>

@@ -43,7 +43,7 @@ class BT_Settings {
 				'default_assignee'    => 'none', // none|project_lead
 				'restrict_to_members' => true,
 				'max_attachment_mb'   => 10,
-				'per_page'            => 20,
+				'per_page'            => 50,
 			),
 			'uninstall'     => array( 'delete_data' => false ),
 		);

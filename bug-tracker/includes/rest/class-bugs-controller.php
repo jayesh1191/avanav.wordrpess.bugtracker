@@ -216,8 +216,9 @@ class BT_Bugs_Controller {
 				$where[] = $wpdb->prepare( "b.$k IN (" . implode( ',', array_fill( 0, count( $vals ), '%s' ) ) . ')', $vals ); // phpcs:ignore WordPress.DB.PreparedSQL
 			}
 		}
-		if ( $r->get_param( 'project_id' ) ) {
-			$where[] = $wpdb->prepare( 'b.project_id = %d', (int) $r->get_param( 'project_id' ) );
+		$pids = array_filter( array_map( 'intval', explode( ',', (string) $r->get_param( 'project_id' ) ) ) );
+		if ( $pids ) {
+			$where[] = 'b.project_id IN (' . implode( ',', $pids ) . ')';
 		}
 		$assignee = (string) $r->get_param( 'assignee_id' );
 		if ( 'me' === $assignee ) {

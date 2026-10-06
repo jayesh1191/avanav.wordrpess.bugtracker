@@ -35,19 +35,19 @@ export default function Users() {
           <div className="overflow-x-auto">
             <table className="min-w-[720px] text-sm">
               <thead><tr className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
-                <th className="px-4 py-2.5 font-medium">User</th>{showEmail && <th className="px-3 py-2.5 font-medium">Email</th>}
-                <th className="px-3 py-2.5 font-medium">Role</th><th className="px-3 py-2.5 font-medium">Assigned bugs</th><th className="px-3 py-2.5 font-medium">Status</th><th className="px-3 py-2.5 font-medium">Last active</th>
+                <th className="px-3 py-1.5 font-medium">User</th>{showEmail && <th className="px-3 py-1.5 font-medium">Email</th>}
+                <th className="px-3 py-1.5 font-medium">Role</th><th className="px-3 py-1.5 font-medium">Assigned bugs</th><th className="px-3 py-1.5 font-medium">Status</th><th className="px-3 py-1.5 font-medium">Last active</th>
               </tr></thead>
               <tbody>
                 {q.isLoading && Array.from({ length: 5 }).map((_, i) => <tr key={i}><td colSpan={6} className="px-4 py-3"><Skeleton className="h-8" /></td></tr>)}
                 {items.map((u) => (
                   <tr key={u.id} className="border-b border-border last:border-0 hover:bg-muted/40">
-                    <td className="px-4 py-2.5"><div className="flex items-center gap-3"><Avatar user={u} size={32} /><div><div className="font-medium">{u.name}</div><div className="text-xs text-muted-foreground">@{u.login}</div></div></div></td>
-                    {showEmail && <td className="px-3 py-2.5 text-muted-foreground">{u.email}</td>}
-                    <td className="px-3 py-2.5"><div className="flex flex-wrap gap-1">{u.roles.map((r) => <Badge key={r}>{r}</Badge>)}</div></td>
-                    <td className="px-3 py-2.5">{u.assigned.total ? <Link to={`/bugs?assignee_id=${u.id}`} className="text-primary hover:underline">{u.assigned.open} open / {u.assigned.total} total</Link> : <span className="text-muted-foreground">0</span>}</td>
-                    <td className="px-3 py-2.5"><Badge color={u.status === 'active' ? '#10b981' : '#6b7280'}>{u.status === 'active' ? 'Active' : 'Inactive'}</Badge></td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{u.last_active ? timeAgo(u.last_active) : 'Never'}</td>
+                    <td className="px-3 py-1.5"><div className="flex items-center gap-2.5"><Avatar user={u} size={22} /><div><div className="font-medium leading-4">{u.name}</div><div className="text-[11px] leading-4 text-muted-foreground">@{u.login}</div></div></div></td>
+                    {showEmail && <td className="px-3 py-1.5 text-muted-foreground">{u.email}</td>}
+                    <td className="px-3 py-1.5"><div className="flex flex-wrap gap-1">{u.roles.map((r) => <Badge key={r}>{r}</Badge>)}</div></td>
+                    <td className="px-3 py-1.5">{u.assigned.total ? <Link to={`/bugs?assignee_id=${u.id}`} className="text-primary hover:underline">{u.assigned.open} open / {u.assigned.total} total</Link> : <span className="text-muted-foreground">0</span>}</td>
+                    <td className="px-3 py-1.5"><span className="inline-flex items-center gap-1.5 text-xs"><span className={`h-1.5 w-1.5 rounded-full ${u.status === 'active' ? 'bg-success' : 'bg-muted-foreground/40'}`} />{u.status === 'active' ? 'Active' : 'Inactive'}</span></td>
+                    <td className="px-3 py-1.5 text-muted-foreground">{u.last_active ? timeAgo(u.last_active) : 'Never'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -14,8 +14,8 @@ export const DropdownMenuLabel = ({ className, ...p }: ComponentPropsWithoutRef<
   <M.Label className={cn('px-2 py-1.5 text-xs font-semibold text-muted-foreground', className)} {...p} />
 );
 
-const panel = 'z-[99002] min-w-[11rem] max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg animate-bt-fade';
-const item = 'relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50 data-[disabled]:pointer-events-none';
+const panel = 'z-[99002] min-w-[10rem] max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg animate-bt-fade';
+const item = 'relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1 text-[13px] outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50 data-[disabled]:pointer-events-none';
 
 export const DropdownMenuContent = ({ className, align = 'end', ...p }: ComponentPropsWithoutRef<typeof M.Content>) => (
   <M.Portal container={portalContainer()}>

@@ -18,6 +18,7 @@ import Reports from '@/pages/Reports';
 import Notifications from '@/pages/Notifications';
 import Settings from '@/pages/Settings';
 import { ApiError } from '@/api/client';
+import { PageBody } from '@/components/layout/PageHeader';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,11 +44,11 @@ function Gate() {
         <Route path="bugs/:id" element={<BugDetail />} />
         <Route path="bugs/:id/edit" element={<BugForm />} />
         <Route path="projects" element={<Projects />} />
-        <Route path="projects/:id" element={<ProjectDetail />} />
-        <Route path="users" element={<Users />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="notifications" element={<Notifications />} />
-        <Route path="settings" element={<Settings />} />
+        <Route path="projects/:id" element={<PageBody><ProjectDetail /></PageBody>} />
+        <Route path="users" element={<PageBody><Users /></PageBody>} />
+        <Route path="reports" element={<PageBody><Reports /></PageBody>} />
+        <Route path="notifications" element={<PageBody><Notifications /></PageBody>} />
+        <Route path="settings" element={<PageBody><Settings /></PageBody>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

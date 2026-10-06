@@ -36,7 +36,7 @@ npm install
 npm run dev     # vite build --watch → build/app.js + app.css
 npm run build   # typecheck + production build
 ```
-The UI is a hash-routed SPA (`/bug-tracker/#/bugs/12`). Tailwind preflight is disabled and every rule is scoped under `#bug-tracker-root`.
+The UI is a hash-routed SPA (`/bug-tracker/#/bugs/12`). Tailwind preflight is disabled and every rule is scoped under `#bug-tracker-root`. The UI is a compact, keyboard-friendly issue tracker: dense list with grouping and one-row filters, properties side panel with inline editing, a merged comments+activity timeline, and shortcuts (`C` new bug, `/` search).
 
 ## Stack
 React 18, TypeScript, Vite, React Router, Tailwind CSS, shadcn/ui-style components on Radix primitives, Lucide, React Hook Form + Zod, TanStack Query, Recharts. Backend: WordPress Plugin API, REST API, `$wpdb` (prepared statements only).

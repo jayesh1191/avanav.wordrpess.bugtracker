@@ -25,7 +25,7 @@ function Tip({ active, payload, label }: any) {
 
 const NoData = () => <EmptyState icon={<BarChart3 className="h-5 w-5" />} title="No data yet" description="Charts appear once bugs are reported." className="py-8" />;
 
-export function DonutChart({ data, height = 240 }: { data: ChartPoint[]; height?: number }) {
+export function DonutChart({ data, height = 200 }: { data: ChartPoint[]; height?: number }) {
   const total = data.reduce((s, d) => s + d.count, 0);
   if (!total) return <NoData />;
   const visible = data.filter((d) => d.count > 0);
@@ -44,7 +44,7 @@ export function DonutChart({ data, height = 240 }: { data: ChartPoint[]; height?
   );
 }
 
-export function CategoryBars({ data, height = 240, horizontal = false }: { data: ChartPoint[]; height?: number; horizontal?: boolean }) {
+export function CategoryBars({ data, height = 200, horizontal = false }: { data: ChartPoint[]; height?: number; horizontal?: boolean }) {
   if (!data.some((d) => d.count > 0)) return <NoData />;
   const h = horizontal ? Math.max(height, data.length * 34 + 30) : height;
   return (
@@ -75,7 +75,7 @@ export function CategoryBars({ data, height = 240, horizontal = false }: { data:
 
 const fmtDate = (d: string, gran: 'day' | 'month') => (gran === 'month' ? format(parseISO(d + '-01'), 'MMM yyyy') : format(parseISO(d), 'MMM d'));
 
-export function TimeChart({ data, series, granularity = 'day', height = 260, kind = 'area' }: {
+export function TimeChart({ data, series, granularity = 'day', height = 200, kind = 'area' }: {
   data: TimePoint[]; series: { key: 'created' | 'resolved'; label: string; color: string }[]; granularity?: 'day' | 'month'; height?: number; kind?: 'area' | 'line';
 }) {
   if (!data.some((d) => series.some((s) => d[s.key] > 0))) return <NoData />;

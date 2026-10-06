@@ -8,6 +8,17 @@ const parse = (v?: string | null) => {
 export const formatDate = (v?: string | null) => { const d = parse(v); return d ? format(d, 'MMM d, yyyy') : '—'; };
 export const formatDateTime = (v?: string | null) => { const d = parse(v); return d ? format(d, 'MMM d, yyyy h:mm a') : '—'; };
 export const timeAgo = (v?: string | null) => { const d = parse(v); return d ? `${formatDistanceToNowStrict(d)} ago` : '—'; };
+/** Compact relative time: 5s, 3m, 2h, 4d, 3mo. */
+export const timeAgoShort = (v?: string | null) => {
+  const d = parse(v);
+  if (!d) return '—';
+  const s = Math.max(0, Math.floor((Date.now() - d.getTime()) / 1000));
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  if (s < 2592000) return `${Math.floor(s / 86400)}d`;
+  return `${Math.floor(s / 2592000)}mo`;
+};
 /** Due dates are plain dates: parse as local to avoid TZ shifts. */
 export const formatDueDate = (v?: string | null) => (v ? format(new Date(v + 'T00:00:00'), 'MMM d, yyyy') : '—');
 export const isOverdue = (v?: string | null) => !!v && new Date(v + 'T23:59:59') < new Date();

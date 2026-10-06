@@ -36,11 +36,11 @@ export function describe(a: ActivityEntry, s?: Settings) {
 export function ActivityList({ items, showBug }: { items: ActivityEntry[]; showBug?: boolean }) {
   const { settings } = useApp();
   return (
-    <ul className="space-y-4">
+    <ul className="space-y-2.5">
       {items.map((a) => (
-        <li key={a.id} className="flex gap-3">
-          <Avatar user={a.user} size={28} />
-          <div className="min-w-0 flex-1 text-sm">
+        <li key={a.id} className="flex gap-2.5">
+          <Avatar user={a.user} size={20} />
+          <div className="min-w-0 flex-1 text-[12.5px] leading-[1.45]">
             <p className="break-words">
               <span className="font-medium">{a.user?.name ?? 'Someone'}</span> {describe(a, settings)}
               {showBug && a.bug_id > 0 && a.bug_title && (
