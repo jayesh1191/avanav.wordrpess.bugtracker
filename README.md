@@ -27,7 +27,7 @@ bug-tracker/                  <- the plugin (zip/copy this folder into wp-conten
 
 ## Settings, favourites and demo data
 * **Collapsible sidebar:** the burger button in the top bar collapses the sidebar to icons (remembered per user).
-* **Starred projects:** click the star on a project (list, detail page) to favourite it – per user. Starred projects get their own *Starred* section in the sidebar (hidden when empty) and sort first on the Projects page.
+* **Starred projects:** click the star on a project (list, detail page) to favourite it – per user. Starred projects also get a *Starred* shortcut section in the sidebar (hidden when empty) and sort first on the Projects page; they always stay in the normal project list too.
 * **Appearance settings** (in-app *Settings → Appearance*): app name, default theme, density (34/42px rows), accent colour, default bugs view, grouping, sidebar default and visible list columns.
 * **Demo data:** *wp-admin → Bug Tracker → Settings & tools* generates realistic sample users, projects, bugs, comments and activity, and can remove exactly what it created.
 * Opening a bug always refetches it (and its comments/activity) so you never see stale data.

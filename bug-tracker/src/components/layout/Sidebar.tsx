@@ -39,6 +39,7 @@ export function Sidebar() {
         {star && collapsed && <Star className="absolute -right-1 -top-1 hidden h-2.5 w-2.5 fill-amber-400 text-amber-400 lg:block" />}
       </span>
       <span className={cn('flex-1 truncate', lc('lg:hidden'))}>{p.name}</span>
+      {p.is_favorite && !star && <Star className={cn('h-3 w-3 shrink-0 fill-amber-400 text-amber-400', lc('lg:hidden'))} aria-label="Starred" />}
       <span className={cn('text-[11px] tabular-nums text-muted-foreground/70', lc('lg:hidden'))}>{p.stats.open + p.stats.in_progress || ''}</span>
     </Link>
   );
@@ -51,7 +52,7 @@ export function Sidebar() {
   );
 
   const favs = projects.data?.filter((p) => p.is_favorite) ?? [];
-  const others = projects.data?.filter((p) => !p.is_favorite) ?? [];
+  const all_projects = projects.data ?? [];
 
   return (
     <>
@@ -93,7 +94,7 @@ export function Sidebar() {
             <Label action={<Link to="/projects" onClick={close} className="font-medium normal-case tracking-normal hover:text-foreground">All</Link>}>Projects</Label>
             <div className="space-y-px">
               {projects.isLoading && <div className="mx-2 h-5 animate-pulse rounded bg-accent" />}
-              {others.slice(0, 12).map((p) => <ProjectLink key={p.id} p={p} />)}
+              {all_projects.slice(0, 12).map((p) => <ProjectLink key={p.id} p={p} />)}
               {projects.data?.length === 0 && <p className={cn('px-2 py-1 text-xs text-muted-foreground', lc('lg:hidden'))}>No projects yet</p>}
             </div>
           </div>
