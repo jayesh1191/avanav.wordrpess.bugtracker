@@ -166,8 +166,11 @@ class BT_Projects_Controller {
 		}
 		if ( null !== $r->get_param( 'lead_id' ) ) {
 			$lead = (int) $r->get_param( 'lead_id' );
-			if ( $lead && ( ! get_userdata( $lead ) || ! user_can( $lead, 'view_bug_tracker' ) ) ) {
-				$err['lead_id'] = __( 'Choose a Bug Tracker user.', 'bug-tracker' );
+			if ( ! BT_Users::is_admin() ) {
+				return BT_Helpers::error( 'bt_forbidden', __( 'Only the Bug Tracker Admin can assign a project lead.', 'bug-tracker' ), 403 );
+			}
+			if ( $lead && ( ! get_userdata( $lead ) || ! BT_Users::active_row( $lead ) ) ) {
+				$err['lead_id'] = __( 'Choose an active Bug Tracker user.', 'bug-tracker' );
 			} else {
 				$f['lead_id'] = max( 0, $lead );
 			}
@@ -175,14 +178,17 @@ class BT_Projects_Controller {
 
 		$members = null;
 		if ( null !== $r->get_param( 'members' ) ) {
+			if ( ! BT_Users::is_admin() ) {
+				return BT_Helpers::error( 'bt_forbidden', __( 'Only the Bug Tracker Admin can change project access.', 'bug-tracker' ), 403 );
+			}
 			$members = array();
 			foreach ( (array) $r->get_param( 'members' ) as $m ) {
 				$uid  = (int) ( is_array( $m ) ? ( $m['user_id'] ?? 0 ) : $m );
 				$role = is_array( $m ) && isset( $m['role'] ) && in_array( $m['role'], array( 'member', 'maintainer' ), true ) ? $m['role'] : 'member';
-				if ( $uid && get_userdata( $uid ) && user_can( $uid, 'view_bug_tracker' ) ) {
+				if ( $uid && get_userdata( $uid ) && BT_Users::active_row( $uid ) ) {
 					$members[ $uid ] = $role;
 				} elseif ( $uid ) {
-					$err['members'] = __( 'One of the selected users cannot use the Bug Tracker.', 'bug-tracker' );
+					$err['members'] = __( 'One of the selected users is not an active Bug Tracker user.', 'bug-tracker' );
 				}
 			}
 		}
@@ -245,6 +251,9 @@ class BT_Projects_Controller {
 			return BT_Helpers::error( 'bt_db_error', __( 'Could not save the project.', 'bug-tracker' ), 500 );
 		}
 		$this->save_members( $id, $members, isset( $f['lead_id'] ) ? $f['lead_id'] : 0 );
+		if ( ! BT_Permissions::sees_all_projects() ) {
+			BT_Users::grant_project( get_current_user_id(), $id, 'maintainer' );
+		}
 		BT_Helpers::projects_map( true );
 		BT_Helpers::log_activity( 0, $id, 'project_created', '', null, $f['name'] );
 		$resp = rest_ensure_response( $this->format_many( array( $this->find( $id ) ) )[0] );

@@ -2,69 +2,61 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Capabilities, roles and per-record access checks.
+ * Authorisation for the Bug Tracker.
+ *
+ * WordPress provides *authentication only* (who is logged in). Authorisation is the
+ * plugin's own: the registry in BT_Users (status + per-user permissions), the single
+ * Bug Tracker Admin, and explicit project assignments. WordPress roles and
+ * capabilities are never consulted here.
+ *
+ * Permission names (kept stable for the REST layer and the UI):
+ *   view_bug_tracker          any active tracker user
+ *   create_bug / edit_bug / delete_bug / manage_projects   per-user flags
+ *   manage_bug_tracker / manage_bug_tracker_users           Bug Tracker Admin only
  */
 class BT_Permissions {
 
-	public static function capabilities() {
-		return array(
-			'view_bug_tracker'         => 'View the bug tracker and the bugs of projects the user belongs to',
-			'create_bug'               => 'Report new bugs, comment and attach files',
-			'edit_bug'                 => 'Edit bugs (status, priority, assignee, ...)',
-			'delete_bug'               => 'Delete bugs and comments',
-			'manage_projects'          => 'Create/edit/delete projects and see every project',
-			'manage_bug_tracker'       => 'Change bug tracker settings',
-			'manage_bug_tracker_users' => 'See user e-mails and edit role permissions',
-		);
+	const ADMIN_ONLY = array( 'manage_bug_tracker', 'manage_bug_tracker_users' );
+
+	public static function permission_names() {
+		return array_merge( array( 'view_bug_tracker' ), BT_Users::PERMISSION_IDS, self::ADMIN_ONLY );
 	}
 
-	public static function default_role_caps() {
-		$all = array_keys( self::capabilities() );
-		return array(
-			'administrator'           => $all,
-			'bug_tracker_manager'     => array( 'read', 'view_bug_tracker', 'create_bug', 'edit_bug', 'delete_bug', 'manage_projects' ),
-			'bug_tracker_contributor' => array( 'read', 'view_bug_tracker', 'create_bug', 'edit_bug' ),
-		);
-	}
-
-	public static function install_roles() {
-		$names = array(
-			'bug_tracker_manager'     => __( 'Bug Tracker Project Manager', 'bug-tracker' ),
-			'bug_tracker_contributor' => __( 'Bug Tracker Contributor', 'bug-tracker' ),
-		);
-		foreach ( self::default_role_caps() as $role => $caps ) {
-			$obj = get_role( $role );
-			if ( ! $obj ) {
-				$obj = add_role( $role, $names[ $role ] ?? $role, array( 'read' => true ) );
-			}
-			if ( $obj ) {
-				foreach ( $caps as $cap ) {
-					$obj->add_cap( $cap );
-				}
-			}
+	/** Can a given WordPress user (default: current) exercise a permission? */
+	public static function user_can( $user_id, $permission ) {
+		$user_id = (int) $user_id;
+		if ( $user_id <= 0 ) {
+			return false;
 		}
+		$row = BT_Users::active_row( $user_id );
+		if ( ! $row ) {
+			return false;
+		}
+		if ( BT_Users::is_admin( $user_id ) ) {
+			return true; // The Bug Tracker Admin holds every permission.
+		}
+		if ( 'view_bug_tracker' === $permission ) {
+			return true;
+		}
+		if ( in_array( $permission, self::ADMIN_ONLY, true ) ) {
+			return false;
+		}
+		return in_array( $permission, BT_Users::row_permissions( $row ), true );
 	}
 
-	public static function remove_roles() {
-		remove_role( 'bug_tracker_manager' );
-		remove_role( 'bug_tracker_contributor' );
-		global $wp_roles;
-		foreach ( $wp_roles->role_objects as $role ) {
-			foreach ( array_keys( self::capabilities() ) as $cap ) {
-				$role->remove_cap( $cap );
-			}
-		}
+	public static function can( $permission ) {
+		return self::user_can( get_current_user_id(), $permission );
 	}
 
 	/* ---- REST permission callbacks ---------------------------------- */
 
-	/** Returns a permission_callback requiring the given capability. */
-	public static function require_cap( $cap ) {
-		return function () use ( $cap ) {
+	/** Returns a permission_callback requiring the given plugin permission. */
+	public static function require_cap( $permission ) {
+		return function () use ( $permission ) {
 			if ( ! is_user_logged_in() ) {
 				return new WP_Error( 'bt_unauthenticated', __( 'You must be logged in.', 'bug-tracker' ), array( 'status' => 401 ) );
 			}
-			if ( ! current_user_can( $cap ) ) {
+			if ( ! self::can( $permission ) ) {
 				return new WP_Error( 'bt_forbidden', __( 'You do not have permission to do that.', 'bug-tracker' ), array( 'status' => 403 ) );
 			}
 			return true;
@@ -73,46 +65,36 @@ class BT_Permissions {
 
 	/* ---- Project scoping -------------------------------------------- */
 
-	/** Can the user see every project? */
+	/** Only the Bug Tracker Admin sees every project. */
 	public static function sees_all_projects( $user_id = 0 ) {
-		$user_id = $user_id ? $user_id : get_current_user_id();
-		if ( user_can( $user_id, 'manage_projects' ) || user_can( $user_id, 'manage_bug_tracker' ) ) {
-			return true;
-		}
-		return ! BT_Settings::get()['project']['restrict_to_members'];
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+		return BT_Users::is_admin( $user_id ) && null !== BT_Users::active_row( $user_id );
 	}
 
 	/**
-	 * Project ids the user may see, or null for "all".
+	 * Project ids the user may access, or null for "all" (Bug Tracker Admin).
+	 * Everyone else: explicit assignments only, and only while active.
 	 */
 	public static function accessible_project_ids( $user_id = 0 ) {
 		global $wpdb;
-		$user_id = $user_id ? $user_id : get_current_user_id();
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
 		if ( self::sees_all_projects( $user_id ) ) {
 			return null;
 		}
-		$pm  = BT_Database::table( 'project_members' );
-		$p   = BT_Database::table( 'projects' );
-		$ids = $wpdb->get_col( $wpdb->prepare(
-			"SELECT project_id FROM $pm WHERE user_id = %d UNION SELECT id FROM $p WHERE lead_id = %d OR created_by = %d", // phpcs:ignore WordPress.DB.PreparedSQL
-			$user_id, $user_id, $user_id
-		) );
+		if ( ! BT_Users::active_row( $user_id ) ) {
+			return array();
+		}
+		$ids = $wpdb->get_col( $wpdb->prepare( 'SELECT project_id FROM ' . BT_Database::table( 'project_members' ) . ' WHERE user_id = %d', $user_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 		return array_map( 'intval', $ids );
 	}
 
-	/** SQL fragment restricting a bugs query to what the current user may see. */
+	/** SQL fragment restricting a bugs query to the current user's projects. */
 	public static function bug_scope_sql( $alias = 'b' ) {
-		global $wpdb;
 		$ids = self::accessible_project_ids();
 		if ( null === $ids ) {
 			return '1=1';
 		}
-		$uid = get_current_user_id();
-		$sql = $wpdb->prepare( "($alias.reporter_id = %d OR $alias.assignee_id = %d", $uid, $uid ); // phpcs:ignore WordPress.DB.PreparedSQL
-		if ( $ids ) {
-			$sql .= " OR $alias.project_id IN (" . implode( ',', array_map( 'intval', $ids ) ) . ')';
-		}
-		return $sql . ')';
+		return $ids ? "$alias.project_id IN (" . implode( ',', array_map( 'intval', $ids ) ) . ')' : '1=0';
 	}
 
 	public static function can_access_project( $project_id ) {
@@ -121,29 +103,23 @@ class BT_Permissions {
 	}
 
 	public static function can_access_bug( $bug ) {
-		$uid = get_current_user_id();
-		return self::can_access_project( $bug->project_id )
-			|| (int) $bug->reporter_id === $uid
-			|| (int) $bug->assignee_id === $uid;
+		return self::can_access_project( $bug->project_id );
 	}
 
-	/** Mutating a bug requires the capability *and* access to it. */
+	/** Mutating a bug requires the permission *and* access to its project. */
 	public static function can_edit_bug( $bug ) {
-		return current_user_can( 'edit_bug' ) && self::can_access_bug( $bug );
+		return self::can( 'edit_bug' ) && self::can_access_bug( $bug );
 	}
 
 	public static function can_delete_bug( $bug ) {
-		if ( ! current_user_can( 'delete_bug' ) || ! self::can_access_bug( $bug ) ) {
-			return false;
-		}
-		return current_user_can( 'manage_projects' ) || (int) $bug->reporter_id === get_current_user_id();
+		return self::can( 'delete_bug' ) && self::can_access_bug( $bug );
 	}
 
 	/** Permission flags exposed to the client (UI hints only; the server enforces). */
 	public static function client_caps() {
 		$out = array();
-		foreach ( array_keys( self::capabilities() ) as $cap ) {
-			$out[ $cap ] = current_user_can( $cap );
+		foreach ( self::permission_names() as $p ) {
+			$out[ $p ] = self::can( $p );
 		}
 		return $out;
 	}

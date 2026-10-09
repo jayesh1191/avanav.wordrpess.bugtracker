@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
 class BT_Database {
 
 	const DB_VERSION_OPTION = 'bug_tracker_db_version';
-	const DB_VERSION        = '1.0.0';
+	const DB_VERSION        = '1.1.0';
 
 	/** Full table name for a short name such as "bugs". */
 	public static function table( $name ) {
@@ -16,7 +16,7 @@ class BT_Database {
 	}
 
 	public static function table_names() {
-		return array( 'projects', 'project_members', 'bugs', 'comments', 'attachments', 'activity', 'notifications' );
+		return array( 'projects', 'project_members', 'bugs', 'comments', 'attachments', 'activity', 'notifications', 'users' );
 	}
 
 	public static function create_tables() {
@@ -142,6 +142,21 @@ class BT_Database {
   KEY bug_id (bug_id)
 ) $charset;";
 
+		// v1.1.0: plugin-owned users (independent of WordPress roles/capabilities).
+		$sql[] = "CREATE TABLE {$t['users']} (
+  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  user_id bigint(20) unsigned NOT NULL,
+  status varchar(10) NOT NULL DEFAULT 'active',
+  permissions text NULL,
+  created_by bigint(20) unsigned NOT NULL DEFAULT 0,
+  created_at datetime NOT NULL,
+  updated_at datetime NOT NULL,
+  status_changed_at datetime NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY user_id (user_id),
+  KEY status (status)
+) $charset;";
+
 		foreach ( $sql as $statement ) {
 			dbDelta( $statement );
 		}
@@ -151,8 +166,9 @@ class BT_Database {
 
 	public static function maybe_upgrade() {
 		if ( get_option( self::DB_VERSION_OPTION ) !== self::DB_VERSION ) {
-			self::create_tables();
+			self::create_tables(); // additive only (dbDelta never drops anything).
 		}
+		BT_Users::maybe_migrate();
 	}
 
 	public static function drop_tables() {

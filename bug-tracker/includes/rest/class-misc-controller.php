@@ -170,18 +170,27 @@ class BT_Misc_Controller {
 	/* Users                                                            */
 	/* ================================================================ */
 
+	/** Directory of active tracker users (assignee pickers, Team page). */
 	public function users( WP_REST_Request $r ) {
 		global $wpdb;
 		$per  = max( 1, min( 200, (int) ( $r->get_param( 'per_page' ) ?: 100 ) ) );
 		$page = max( 1, (int) $r->get_param( 'page' ) );
+		$ids  = BT_Users::active_user_ids();
+		// Non-admins only see people they share at least one project with.
+		if ( ! BT_Users::is_admin() ) {
+			$mine = BT_Permissions::accessible_project_ids();
+			$pm   = BT_Database::table( 'project_members' );
+			$ids  = $mine ? array_map( 'intval', $wpdb->get_col( "SELECT DISTINCT user_id FROM $pm WHERE project_id IN (" . implode( ',', array_map( 'intval', $mine ) ) . ')' ) ) : array(); // phpcs:ignore WordPress.DB.PreparedSQL
+			$ids  = array_values( array_unique( array_merge( array_intersect( $ids, BT_Users::active_user_ids() ), array( get_current_user_id() ) ) ) );
+		}
 		$args = array(
-			'capability__in' => array( 'view_bug_tracker' ),
-			'number'         => $per,
-			'paged'          => $page,
-			'orderby'        => 'display_name',
-			'order'          => 'ASC',
-			'fields'         => 'all',
-			'count_total'    => true,
+			'include'     => $ids ? $ids : array( 0 ),
+			'number'      => $per,
+			'paged'       => $page,
+			'orderby'     => 'display_name',
+			'order'       => 'ASC',
+			'fields'      => 'all',
+			'count_total' => true,
 		);
 		$search = trim( sanitize_text_field( (string) $r->get_param( 'search' ) ) );
 		if ( '' !== $search ) {
@@ -190,13 +199,13 @@ class BT_Misc_Controller {
 		}
 		$q     = new WP_User_Query( $args );
 		$users = $q->get_results();
-		$ids   = wp_list_pluck( $users, 'ID' );
+		$uids  = wp_list_pluck( $users, 'ID' );
 
 		$assigned = array();
 		$last     = array();
-		if ( $ids ) {
-			$in    = implode( ',', array_map( 'intval', $ids ) );
-			$stats = $wpdb->get_results( 'SELECT assignee_id, status, COUNT(*) AS n FROM ' . BT_Database::table( 'bugs' ) . " WHERE assignee_id IN ($in) GROUP BY assignee_id, status" ); // phpcs:ignore WordPress.DB.PreparedSQL
+		if ( $uids ) {
+			$in    = implode( ',', array_map( 'intval', $uids ) );
+			$stats = $wpdb->get_results( 'SELECT assignee_id, status, COUNT(*) AS n FROM ' . BT_Database::table( 'bugs' ) . " WHERE assignee_id IN ($in) AND " . BT_Permissions::bug_scope_sql( BT_Database::table( 'bugs' ) ) . ' GROUP BY assignee_id, status' ); // phpcs:ignore WordPress.DB.PreparedSQL
 			foreach ( $stats as $s ) {
 				$u = (int) $s->assignee_id;
 				if ( ! isset( $assigned[ $u ] ) ) {
@@ -207,30 +216,26 @@ class BT_Misc_Controller {
 					$assigned[ $u ]['open'] += (int) $s->n;
 				}
 			}
-			foreach ( $wpdb->get_results( 'SELECT user_id, MAX(created_at) AS last_at FROM ' . BT_Database::table( 'activity' ) . " WHERE user_id IN ($in) GROUP BY user_id" ) as $a ) { // phpcs:ignore WordPress.DB.PreparedSQL
+			foreach ( $wpdb->get_results( 'SELECT user_id, MAX(created_at) AS last_at FROM ' . BT_Database::table( 'activity' ) . " WHERE user_id IN ($in) AND bug_id > 0 GROUP BY user_id" ) as $a ) { // phpcs:ignore WordPress.DB.PreparedSQL
 				$last[ (int) $a->user_id ] = $a->last_at;
 			}
 		}
 
-		$show_email = current_user_can( 'manage_bug_tracker_users' );
-		$names      = wp_roles()->get_names();
+		$show_email = BT_Permissions::can( 'manage_bug_tracker_users' );
 		$items      = array();
 		foreach ( $users as $u ) {
-			$roles = array();
-			foreach ( $u->roles as $role ) {
-				$roles[] = isset( $names[ $role ] ) ? translate_user_role( $names[ $role ] ) : $role;
-			}
 			$last_at = isset( $last[ $u->ID ] ) ? $last[ $u->ID ] : null;
+			$is_admin = BT_Users::is_admin( $u->ID );
 			$item    = array(
-				'id'           => (int) $u->ID,
-				'name'         => $u->display_name,
-				'login'        => $u->user_login,
-				'avatar'       => get_avatar_url( $u->ID, array( 'size' => 64 ) ),
-				'roles'        => $roles,
-				'assigned'     => isset( $assigned[ $u->ID ] ) ? $assigned[ $u->ID ] : array( 'total' => 0, 'open' => 0 ),
-				'last_active'  => BT_Helpers::iso( $last_at ),
-				'status'       => ( $last_at && strtotime( $last_at . ' UTC' ) > time() - 30 * DAY_IN_SECONDS ) ? 'active' : 'inactive',
-				'sees_all_projects' => BT_Permissions::sees_all_projects( $u->ID ),
+				'id'                => (int) $u->ID,
+				'name'              => $u->display_name,
+				'login'             => $u->user_login,
+				'avatar'            => get_avatar_url( $u->ID, array( 'size' => 64 ) ),
+				'roles'             => array( $is_admin ? 'Bug Tracker Admin' : 'Member' ),
+				'assigned'          => isset( $assigned[ $u->ID ] ) ? $assigned[ $u->ID ] : array( 'total' => 0, 'open' => 0 ),
+				'last_active'       => BT_Helpers::iso( $last_at ),
+				'status'            => ( $last_at && strtotime( $last_at . ' UTC' ) > time() - 30 * DAY_IN_SECONDS ) ? 'active' : 'inactive',
+				'sees_all_projects' => $is_admin,
 			);
 			if ( $show_email ) {
 				$item['email'] = $u->user_email;
@@ -298,26 +303,11 @@ class BT_Misc_Controller {
 
 	private function settings_payload() {
 		$s = BT_Settings::get();
-		if ( ! current_user_can( 'manage_bug_tracker' ) ) {
+		if ( ! BT_Permissions::can( 'manage_bug_tracker' ) ) {
 			// Everyone else only needs the vocabularies, not operational settings.
 			unset( $s['uninstall'] );
 		}
 		$s['limits'] = array( 'server_max_upload_mb' => (int) floor( wp_max_upload_size() / MB_IN_BYTES ) );
-		if ( current_user_can( 'manage_bug_tracker_users' ) ) {
-			$roles = array();
-			foreach ( wp_roles()->roles as $slug => $role ) {
-				$caps = array();
-				foreach ( array_keys( BT_Permissions::capabilities() ) as $cap ) {
-					$caps[ $cap ] = ! empty( $role['capabilities'][ $cap ] );
-				}
-				$roles[] = array( 'slug' => $slug, 'name' => translate_user_role( $role['name'] ), 'locked' => 'administrator' === $slug, 'caps' => $caps );
-			}
-			$cap_list = array();
-			foreach ( BT_Permissions::capabilities() as $cap => $label ) {
-				$cap_list[] = array( 'cap' => $cap, 'label' => $label );
-			}
-			$s['permissions'] = array( 'capabilities' => $cap_list, 'roles' => $roles );
-		}
 		return $s;
 	}
 
@@ -331,29 +321,6 @@ class BT_Misc_Controller {
 		$clean = BT_Settings::sanitize( $body );
 		if ( is_wp_error( $clean ) ) {
 			return $clean;
-		}
-		if ( isset( $body['permissions']['roles'] ) && is_array( $body['permissions']['roles'] ) ) {
-			if ( ! current_user_can( 'manage_bug_tracker_users' ) ) {
-				return BT_Helpers::error( 'bt_forbidden', __( 'You cannot change role permissions.', 'bug-tracker' ), 403 );
-			}
-			$known = array_keys( BT_Permissions::capabilities() );
-			foreach ( $body['permissions']['roles'] as $row ) {
-				$slug = isset( $row['slug'] ) ? sanitize_key( $row['slug'] ) : '';
-				$role = $slug ? get_role( $slug ) : null;
-				if ( ! $role || 'administrator' === $slug || empty( $row['caps'] ) || ! is_array( $row['caps'] ) ) {
-					continue;
-				}
-				foreach ( $known as $cap ) {
-					if ( ! array_key_exists( $cap, $row['caps'] ) ) {
-						continue;
-					}
-					if ( rest_sanitize_boolean( $row['caps'][ $cap ] ) ) {
-						$role->add_cap( $cap );
-					} else {
-						$role->remove_cap( $cap );
-					}
-				}
-			}
 		}
 		BT_Settings::save( $clean );
 		return rest_ensure_response( $this->settings_payload() );

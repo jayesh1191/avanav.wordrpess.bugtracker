@@ -181,7 +181,7 @@ class BT_Bugs_Controller {
 			return true;
 		}
 		$u = get_userdata( $assignee_id );
-		if ( ! $u || ! user_can( $u, 'view_bug_tracker' ) ) {
+		if ( ! $u || ! BT_Users::active_row( $assignee_id ) ) {
 			return BT_Helpers::error( 'bt_validation', __( 'That user cannot be assigned bugs.', 'bug-tracker' ), 400, array( 'fields' => array( 'assignee_id' => __( 'That user cannot be assigned bugs.', 'bug-tracker' ) ) ) );
 		}
 		$ids = BT_Permissions::accessible_project_ids( $assignee_id );
@@ -513,7 +513,7 @@ class BT_Bugs_Controller {
 		}
 		$fields = array();
 		if ( 'delete' !== $action ) {
-			if ( ! current_user_can( 'edit_bug' ) ) {
+			if ( ! BT_Permissions::can( 'edit_bug' ) ) {
 				return BT_Helpers::error( 'bt_forbidden', __( 'You cannot edit bugs.', 'bug-tracker' ), 403 );
 			}
 			$fields = $this->read_fields( $fake, true );
@@ -563,8 +563,8 @@ class BT_Bugs_Controller {
 
 	private function format_comment( $c, $bug = null ) {
 		$can_delete = false;
-		if ( current_user_can( 'delete_bug' ) || (int) $c->user_id === get_current_user_id() ) {
-			$can_delete = current_user_can( 'create_bug' );
+		if ( BT_Permissions::can( 'delete_bug' ) || (int) $c->user_id === get_current_user_id() ) {
+			$can_delete = BT_Permissions::can( 'create_bug' );
 		}
 		return array(
 			'id'         => (int) $c->id,
@@ -629,7 +629,7 @@ class BT_Bugs_Controller {
 		if ( ! $c || is_wp_error( $bug ) ) {
 			return BT_Helpers::error( 'bt_not_found', __( 'Comment not found.', 'bug-tracker' ), 404 );
 		}
-		if ( ! ( current_user_can( 'delete_bug' ) || (int) $c->user_id === get_current_user_id() ) ) {
+		if ( ! ( BT_Permissions::can( 'delete_bug' ) || (int) $c->user_id === get_current_user_id() ) ) {
 			return BT_Helpers::error( 'bt_forbidden', __( 'You cannot delete this comment.', 'bug-tracker' ), 403 );
 		}
 		$wpdb->delete( $t, array( 'id' => $c->id ) );
@@ -741,7 +741,7 @@ class BT_Bugs_Controller {
 			return $found;
 		}
 		list( $a, $bug ) = $found;
-		if ( ! ( BT_Permissions::can_edit_bug( $bug ) || ( (int) $a->user_id === get_current_user_id() && current_user_can( 'create_bug' ) ) ) ) {
+		if ( ! ( BT_Permissions::can_edit_bug( $bug ) || ( (int) $a->user_id === get_current_user_id() && BT_Permissions::can( 'create_bug' ) ) ) ) {
 			return BT_Helpers::error( 'bt_forbidden', __( 'You cannot remove this attachment.', 'bug-tracker' ), 403 );
 		}
 		$path = BT_Helpers::upload_dir() . '/' . basename( $a->stored_name );

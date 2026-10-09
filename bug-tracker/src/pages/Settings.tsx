@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { MiscApi } from '@/api/endpoints';
@@ -11,7 +12,6 @@ import { Select } from '@/components/ui/select';
 import { Checkbox, Switch } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EmptyState } from '@/components/ui/states';
 import { useToast } from '@/components/ui/toast';
 import { useApp } from '@/store/app';
 import { ACCENTS } from '@/utils/color';
@@ -68,7 +68,6 @@ export default function Settings() {
 
   if (!draft || !settings) return <><PageHeader title="Settings" crumbs={[{ label: 'Settings' }]} /><Skeleton className="h-96" /></>;
   const manage = can('manage_bug_tracker');
-  const manageUsers = can('manage_bug_tracker_users') && !!draft.permissions;
   const dirty = JSON.stringify(draft) !== JSON.stringify(settings);
   const patch = (p: Partial<S>) => setDraft({ ...draft, ...p });
   const patchUi = (p: Partial<S['ui']>) => setDraft({ ...draft, ui: { ...draft.ui, ...p } });
@@ -82,10 +81,9 @@ export default function Settings() {
     <>
       <PageHeader title="Settings" crumbs={[{ label: 'Settings' }]} description="Customise workflow vocabulary, notifications and permissions."
         actions={<><Button variant="outline" disabled={!dirty} onClick={() => setDraft(structuredClone(settings))}>Reset</Button><Button disabled={!dirty} loading={save.isPending} onClick={submit}>Save settings</Button></>} />
-      <Tabs defaultValue={manage ? 'statuses' : 'permissions'}>
+      <Tabs defaultValue="statuses">
         <TabsList>
           {manage && <><TabsTrigger value="statuses">Statuses</TabsTrigger><TabsTrigger value="priorities">Priorities</TabsTrigger><TabsTrigger value="severities">Severities</TabsTrigger><TabsTrigger value="project">Projects</TabsTrigger><TabsTrigger value="notifications">Notifications</TabsTrigger><TabsTrigger value="appearance">Appearance</TabsTrigger></>}
-          {manageUsers && <TabsTrigger value="permissions">User permissions</TabsTrigger>}
         </TabsList>
         {manage && <>
           <TabsContent value="statuses"><ListEditor title="Bug statuses" description="The workflow stages a bug moves through." items={draft.statuses} withCategory onChange={(i) => patch({ statuses: i as StatusDef[] })} /></TabsContent>
@@ -93,7 +91,7 @@ export default function Settings() {
           <TabsContent value="severities"><ListEditor title="Severities" description="How badly a bug affects users." items={draft.severities} onChange={(i) => patch({ severities: i })} /></TabsContent>
           <TabsContent value="project">
             <Card><CardHeader><CardTitle>Project settings</CardTitle></CardHeader><CardContent className="space-y-4">
-              <Toggle label="Limit visibility to project members" description="When on, users without “manage projects” only see bugs in projects they belong to (plus bugs they reported or are assigned)." checked={draft.project.restrict_to_members} onChange={(v) => patch({ project: { ...draft.project, restrict_to_members: v } })} />
+              <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">People only see projects they are assigned to. Manage users and their project access on the <Link to="/users" className="font-medium text-primary hover:underline">Users</Link> screen.</p>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div><label className="mb-1.5 block text-sm font-medium" htmlFor="da">Default assignee</label>
                   <Select id="da" value={draft.project.default_assignee} onChange={(v) => patch({ project: { ...draft.project, default_assignee: v as 'none' | 'project_lead' } })} options={[{ value: 'none', label: 'Unassigned' }, { value: 'project_lead', label: 'Project lead' }]} /></div>
@@ -157,32 +155,6 @@ export default function Settings() {
             </CardContent></Card>
           </TabsContent>
         </>}
-        {manageUsers && draft.permissions && (
-          <TabsContent value="permissions">
-            <Card><CardHeader><CardTitle>Role permissions</CardTitle><CardDescription>Choose what each WordPress role can do in the Bug Tracker. Administrators always have every permission.</CardDescription></CardHeader>
-              <CardContent className="relative overflow-x-auto p-0 sm:p-0">
-                {draft.permissions.roles.length === 0 ? <EmptyState title="No roles" /> : (
-                  <table className="min-w-[720px] text-sm">
-                    <thead><tr className="border-y border-border bg-muted/40 text-xs text-muted-foreground"><th className="px-4 py-2.5 text-left font-medium">Role</th>{draft.permissions.capabilities.map((c) => <th key={c.cap} className="px-2 py-2.5 text-center font-medium" title={c.label}>{c.cap.replace(/_/g, ' ')}</th>)}</tr></thead>
-                    <tbody>
-                      {draft.permissions.roles.map((role, ri) => (
-                        <tr key={role.slug} className="border-b border-border last:border-0">
-                          <td className="px-4 py-2.5 font-medium">{role.name}</td>
-                          {draft.permissions!.capabilities.map((c) => (
-                            <td key={c.cap} className="px-2 py-2.5"><div className="flex justify-center">
-                              <Checkbox checked={role.caps[c.cap]} disabled={role.locked} aria-label={`${role.name}: ${c.cap}`}
-                                onCheckedChange={(v) => { const roles = draft.permissions!.roles.map((r, i) => (i === ri ? { ...r, caps: { ...r.caps, [c.cap]: v === true } } : r)); patch({ permissions: { ...draft.permissions!, roles } }); }} />
-                            </div></td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </CardContent></Card>
-            <ul className="mt-3 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">{draft.permissions.capabilities.map((c) => <li key={c.cap}><code>{c.cap}</code> — {c.label}</li>)}</ul>
-          </TabsContent>
-        )}
       </Tabs>
     </>
   );

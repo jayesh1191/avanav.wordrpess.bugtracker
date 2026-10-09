@@ -24,6 +24,14 @@ export function describe(a: ActivityEntry, s?: Settings) {
     case 'attachment_removed': return `removed attachment ${a.old_value}`;
     case 'deleted': return `deleted bug ${a.new_value}`;
     case 'project_created': return `created project ${a.new_value}`;
+    case 'user_added': return `added ${a.new_value} to the Bug Tracker`;
+    case 'user_activated': return `activated ${a.new_value}`;
+    case 'user_deactivated': return `deactivated ${a.new_value}`;
+    case 'user_removed': return `removed ${a.new_value} from the Bug Tracker`;
+    case 'user_updated': return `updated user details (${a.new_value})`;
+    case 'access_granted': return `gave a user access to ${a.new_value}`;
+    case 'access_revoked': return `removed a user's access to ${a.new_value}`;
+    case 'admin_assigned': return 'assigned a new Bug Tracker Admin';
     case 'updated': {
       const label = FIELD_LABELS[a.field] ?? a.field;
       if (!a.old_value && !a.new_value) return `updated the ${label}`;

@@ -9,6 +9,10 @@ $bt_settings = get_option( BT_Settings::OPTION, array() );
 if ( ! empty( $bt_settings['uninstall']['delete_data'] ) ) {
 	BT_Database::drop_tables();
 	delete_option( BT_Settings::OPTION );
+	foreach ( array( 'bug_tracker_admin_user_id', 'bug_tracker_users_migrated', 'bug_tracker_license', 'bug_tracker_demo' ) as $bt_opt ) {
+		delete_option( $bt_opt );
+	}
+	delete_metadata( 'user', 0, 'bug_tracker_favorite_projects', '', true );
 	foreach ( array( 'bug_tracker_manager', 'bug_tracker_contributor' ) as $bt_role ) {
 		remove_role( $bt_role );
 	}

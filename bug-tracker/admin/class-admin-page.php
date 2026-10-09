@@ -14,10 +14,14 @@ class BT_Admin_Page {
 	}
 
 	public function register_menu() {
+		// Authorisation is the plugin's own; WordPress only needs a baseline capability to render the menu.
+		if ( ! BT_Permissions::can( 'view_bug_tracker' ) && ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
 		$hook = add_menu_page(
 			__( 'Bug Tracker', 'bug-tracker' ),
 			__( 'Bug Tracker', 'bug-tracker' ),
-			'view_bug_tracker',
+			'read',
 			self::SLUG,
 			'__return_null',
 			'dashicons-buddicons-bbpress-logo',

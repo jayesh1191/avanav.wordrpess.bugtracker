@@ -34,6 +34,10 @@ class BT_Demo_Data {
 	public static function generate( $users_n = 5, $projects_n = 3, $bugs_n = 40 ) {
 		global $wpdb;
 		$users_n    = max( 0, min( 20, (int) $users_n ) );
+		$remaining  = BT_License::remaining(); // never exceed the licensed number of active users
+		if ( null !== $remaining ) {
+			$users_n = min( $users_n, $remaining );
+		}
 		$projects_n = max( 1, min( 8, (int) $projects_n ) );
 		$bugs_n     = max( 1, min( 400, (int) $bugs_n ) );
 		$cfg        = BT_Settings::get();
@@ -53,13 +57,20 @@ class BT_Demo_Data {
 				'user_email'   => $login . '@example.invalid',
 				'display_name' => $name,
 				'first_name'   => strtok( $name, ' ' ),
-				'role'         => ( 0 === $i ) ? 'bug_tracker_manager' : 'bug_tracker_contributor',
+				'role'         => '', // no WordPress role; tracker access lives in the plugin's own user table
 			) );
 			if ( ! is_wp_error( $id ) ) {
+				$added = BT_Users::add( $id, 0 === $i ? array( 'create_bug', 'edit_bug', 'delete_bug', 'manage_projects' ) : array( 'create_bug', 'edit_bug' ) );
+				if ( is_wp_error( $added ) ) {
+					require_once ABSPATH . 'wp-admin/includes/user.php';
+					wp_delete_user( $id );
+					continue;
+				}
 				$new_users[] = (int) $id;
 			}
 		}
 		$team = array_values( array_unique( array_merge( array( $me ), $new_users ) ) );
+		BT_Users::flush_cache();
 
 		/* ---- projects ---- */
 		$catalog = array(
@@ -199,6 +210,7 @@ class BT_Demo_Data {
 			$wpdb->query( 'DELETE FROM ' . BT_Database::table( 'notifications' ) . " WHERE user_id IN ($in)" ); // phpcs:ignore WordPress.DB.PreparedSQL
 			require_once ABSPATH . 'wp-admin/includes/user.php';
 			foreach ( $t['users'] as $uid ) {
+				BT_Users::purge( $uid );
 				if ( get_userdata( $uid ) && 0 === strpos( get_userdata( $uid )->user_login, 'bt_demo_' ) ) {
 					wp_delete_user( $uid );
 				}

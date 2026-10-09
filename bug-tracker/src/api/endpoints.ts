@@ -1,5 +1,6 @@
 import { api } from './client';
 import type {
+  Candidate, LicenseStatus, TrackerUser, TrackerUserList,
   ActivityEntry, Attachment, BugDetail, BugFilters, BugSummary, Comment, Dashboard, Notification, Paged,
   Project, Reports, Settings, WpUser,
 } from '@/types';
@@ -39,4 +40,15 @@ export const MiscApi = {
   markAllRead: () => api.put<unknown>('notifications/read-all'),
   settings: () => api.get<Settings>('settings'),
   saveSettings: (s: unknown) => api.put<Settings>('settings', s),
+};
+
+export const TrackerUsersApi = {
+  list: (p: { search?: string; status?: string; page?: number; per_page?: number }) => api.get<TrackerUserList>('tracker-users', p),
+  candidates: (search?: string) => api.get<Candidate[]>('tracker-users/candidates', { search }),
+  license: () => api.get<LicenseStatus>('tracker-users/license'),
+  add: (body: Record<string, unknown>) => api.post<TrackerUser>('tracker-users', body),
+  update: (id: number, body: Record<string, unknown>) => api.put<TrackerUser>(`tracker-users/${id}`, body),
+  remove: (id: number) => api.del<{ removed: boolean }>(`tracker-users/${id}`),
+  setProject: (id: number, projectId: number, granted: boolean, role: 'member' | 'maintainer' = 'member') =>
+    api.put<TrackerUser>(`tracker-users/${id}/projects/${projectId}`, { granted, role }),
 };

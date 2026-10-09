@@ -24,7 +24,13 @@ class BT_Plugin {
 
 	public static function activate() {
 		BT_Database::create_tables();
-		BT_Permissions::install_roles();
+		BT_Users::maybe_migrate(); // converts legacy role-based users on upgrades (no-op on fresh installs)
+		// Secure initial setup: activating the plugin is a privileged WordPress action, so a site
+		// administrator doing it becomes the first Bug Tracker Admin. If nobody is assigned yet
+		// (e.g. WP-CLI / network activation) the app stays locked until a site admin assigns one.
+		if ( ! BT_Users::admin_id() && current_user_can( 'manage_options' ) ) {
+			BT_Users::set_admin( get_current_user_id() );
+		}
 		if ( false === get_option( BT_Settings::OPTION ) ) {
 			add_option( BT_Settings::OPTION, BT_Settings::defaults(), '', false );
 		}

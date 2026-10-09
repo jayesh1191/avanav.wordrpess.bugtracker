@@ -45,7 +45,7 @@ function Gate() {
         <Route path="bugs/:id/edit" element={<BugForm />} />
         <Route path="projects" element={<Projects />} />
         <Route path="projects/:id" element={<PageBody><ProjectDetail /></PageBody>} />
-        <Route path="users" element={<PageBody><Users /></PageBody>} />
+        <Route path="users" element={<Users />} />
         <Route path="reports" element={<PageBody><Reports /></PageBody>} />
         <Route path="notifications" element={<PageBody><Notifications /></PageBody>} />
         <Route path="settings" element={<PageBody><Settings /></PageBody>} />

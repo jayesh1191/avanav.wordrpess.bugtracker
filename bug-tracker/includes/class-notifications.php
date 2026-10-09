@@ -51,12 +51,11 @@ class BT_Notifications {
 	}
 
 	private static function user_can_see_bug( $uid, $bug ) {
-		if ( ! user_can( $uid, 'view_bug_tracker' ) ) {
+		if ( ! BT_Permissions::user_can( $uid, 'view_bug_tracker' ) ) {
 			return false;
 		}
 		$ids = BT_Permissions::accessible_project_ids( $uid );
-		return null === $ids || in_array( (int) $bug->project_id, $ids, true )
-			|| (int) $bug->reporter_id === $uid || (int) $bug->assignee_id === $uid;
+		return null === $ids || in_array( (int) $bug->project_id, $ids, true );
 	}
 
 	/** Extract @login mentions that resolve to real users. */

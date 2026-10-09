@@ -103,7 +103,7 @@ export function Sidebar() {
             <Label>Insights</Label>
             <Item to="/projects" icon={FolderKanban} label="Projects" />
             <Item to="/reports" icon={BarChart3} label="Reports" />
-            <Item to="/users" icon={Users} label="Team" />
+            <Item to="/users" icon={Users} label={can('manage_bug_tracker_users') ? 'Users' : 'Team'} />
           </div>
         </nav>
 

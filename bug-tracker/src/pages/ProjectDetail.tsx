@@ -38,6 +38,7 @@ export default function ProjectDetail() {
   const [editing, setEditing] = useState(false);
   const [toAdd, setToAdd] = useState('');
   const manage = can('manage_projects');
+  const manageAccess = can('manage_bug_tracker_users'); // only the Bug Tracker Admin changes who can access a project
 
   const setMembers = useMutation({
     mutationFn: (members: { user_id: number; role: string }[]) => ProjectsApi.update(id, { members }),
@@ -106,20 +107,20 @@ export default function ProjectDetail() {
 
         <TabsContent value="members">
           <Card>
-            {manage && (
+            {manageAccess && (
               <div className="flex flex-wrap items-center gap-2 border-b border-border p-3">
                 <div className="w-64"><Select aria-label="Add member" value={toAdd} onChange={setToAdd} placeholder="Add a member…" options={(users.data?.items ?? []).filter((u) => !memberIds.has(u.id)).map((u) => ({ value: String(u.id), label: u.name }))} /></div>
                 <Button size="sm" disabled={!toAdd} loading={setMembers.isPending} onClick={() => setMembers.mutate([...asList(), { user_id: Number(toAdd), role: 'member' }])}><Plus className="h-4 w-4" />Add</Button>
               </div>
             )}
-            {p.members.length === 0 ? <EmptyState title="No members yet" description={manage ? 'Add people who should see this project’s bugs.' : undefined} /> : (
+            {p.members.length === 0 ? <EmptyState title="No members yet" description={manageAccess ? 'Add people who should see this project’s bugs.' : undefined} /> : (
               <ul className="divide-y divide-border">
                 {p.members.map((m) => (
                   <li key={m.user.id} className="flex items-center gap-2.5 px-3 py-1.5">
                     <Avatar user={m.user} size={22} />
                     <div className="min-w-0 flex-1"><div className="truncate font-medium">{m.user.name}</div><div className="text-xs text-muted-foreground">@{m.user.login}</div></div>
                     {p.lead?.id === m.user.id && <Badge>Lead</Badge>}
-                    {manage && p.lead?.id !== m.user.id && (
+                    {manageAccess && p.lead?.id !== m.user.id && (
                       <Button variant="ghost" size="icon" aria-label={`Remove ${m.user.name}`} disabled={setMembers.isPending} onClick={() => setMembers.mutate(asList(p.members.filter((x) => x.user.id !== m.user.id)))}><UserMinus className="h-4 w-4" /></Button>
                     )}
                   </li>

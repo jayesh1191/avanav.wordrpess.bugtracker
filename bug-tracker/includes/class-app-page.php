@@ -45,8 +45,17 @@ class BT_App_Page {
 			wp_safe_redirect( wp_login_url( self::url() ) );
 			exit;
 		}
-		if ( ! current_user_can( 'view_bug_tracker' ) ) {
-			wp_die( esc_html__( 'You do not have access to the Bug Tracker.', 'bug-tracker' ), esc_html__( 'Access denied', 'bug-tracker' ), array( 'response' => 403 ) );
+		if ( ! BT_Users::admin_id() ) {
+			$msg = esc_html__( 'The Bug Tracker has not been set up yet: no Bug Tracker Admin is assigned.', 'bug-tracker' );
+			if ( current_user_can( 'manage_options' ) ) { // site administrator: point to the one place where this can be fixed
+				$msg .= ' <a href="' . esc_url( admin_url( 'admin.php?page=bug-tracker-settings' ) ) . '">' . esc_html__( 'Assign the Bug Tracker Admin', 'bug-tracker' ) . '</a>';
+			} else {
+				$msg .= ' ' . esc_html__( 'Please ask the site administrator to finish the setup.', 'bug-tracker' );
+			}
+			wp_die( wp_kses_post( $msg ), esc_html__( 'Bug Tracker setup required', 'bug-tracker' ), array( 'response' => 403 ) );
+		}
+		if ( ! BT_Permissions::can( 'view_bug_tracker' ) ) {
+			wp_die( esc_html__( 'You do not have access to the Bug Tracker. Ask the Bug Tracker Admin to add or reactivate your account.', 'bug-tracker' ), esc_html__( 'Access denied', 'bug-tracker' ), array( 'response' => 403 ) );
 		}
 		$this->render();
 		exit;

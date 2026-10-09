@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, Search, Users as UsersIcon } from 'lucide-react';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageBody, PageHeader } from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +12,12 @@ import { EmptyState, ErrorState } from '@/components/ui/states';
 import { Pagination } from '@/components/Pagination';
 import { config } from '@/api/client';
 import { useApp } from '@/store/app';
+import { ManageUsers } from '@/components/users/ManageUsers';
 import { useUsers } from '@/hooks/useData';
 import { useDebounce } from '@/hooks/useDebounce';
 import { timeAgo } from '@/utils/format';
 
-export default function Users() {
+function TeamTable() {
   const { can } = useApp();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -59,4 +60,10 @@ export default function Users() {
       </Card>
     </>
   );
+}
+
+/** The Bug Tracker Admin manages users here; everyone else sees a read-only team directory. */
+export default function Users() {
+  const { can } = useApp();
+  return can('manage_bug_tracker_users') ? <ManageUsers /> : <PageBody><TeamTable /></PageBody>;
 }

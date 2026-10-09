@@ -26,6 +26,8 @@ class BT_REST_API {
 		$bugs     = new BT_Bugs_Controller();
 		$projects = new BT_Projects_Controller();
 		$misc     = new BT_Misc_Controller();
+		$tusers   = new BT_Users_Controller();
+		$admin    = BT_Permissions::require_cap( 'manage_bug_tracker_users' );
 		$ns       = BUG_TRACKER_NAMESPACE;
 		$view     = BT_Permissions::require_cap( 'view_bug_tracker' );
 		$create   = BT_Permissions::require_cap( 'create_bug' );
@@ -77,6 +79,19 @@ class BT_REST_API {
 		) );
 
 		$route( '/projects/(?P<id>\d+)/favorite', array( $h( 'PUT,POST', array( $projects, 'favorite' ), $view, $id ) ) );
+
+		// User management – Bug Tracker Admin only.
+		$route( '/tracker-users', array(
+			$h( 'GET', array( $tusers, 'index' ), $admin ),
+			$h( 'POST', array( $tusers, 'create' ), $admin ),
+		) );
+		$route( '/tracker-users/candidates', array( $h( 'GET', array( $tusers, 'candidates' ), $admin ) ) );
+		$route( '/tracker-users/license', array( $h( 'GET', array( $tusers, 'license' ), $admin ) ) );
+		$route( '/tracker-users/(?P<id>\d+)', array(
+			$h( 'PUT,PATCH', array( $tusers, 'update' ), $admin, $id ),
+			$h( 'DELETE', array( $tusers, 'destroy' ), $admin, $id ),
+		) );
+		$route( '/tracker-users/(?P<id>\d+)/projects/(?P<project_id>\d+)', array( $h( 'PUT', array( $tusers, 'set_project' ), $admin, $id ) ) );
 
 		$route( '/notifications', array( $h( 'GET', array( $misc, 'notifications' ), $view ) ) );
 		$route( '/notifications/read-all', array( $h( 'PUT', array( $misc, 'notifications_read_all' ), $view ) ) );

@@ -15,6 +15,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/toast';
 import { useUsers } from '@/hooks/useData';
 import { useInvalidateBugs } from '@/hooks/useData';
+import { useApp } from '@/store/app';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters').max(190, 'Name is too long'),
@@ -31,6 +32,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSaved }: { open: 
   const toast = useToast();
   const invalidate = useInvalidateBugs();
   const users = useUsers();
+  const isAdmin = useApp().can('manage_bug_tracker_users');
   const [filter, setFilter] = useState('');
   const { register, control, handleSubmit, setError, watch, formState: { errors } } = useForm<V>({
     resolver: zodResolver(schema),
@@ -43,7 +45,9 @@ export function ProjectDialog({ open, onOpenChange, project, onSaved }: { open: 
 
   const save = useMutation({
     mutationFn: (v: V) => {
-      const body = { ...v, lead_id: Number(v.lead_id || 0), members: v.members.map((id) => ({ user_id: Number(id), role: project?.members.find((m) => String(m.user.id) === id)?.role ?? 'member' })) };
+      const base = { name: v.name, key: v.key, description: v.description, color: v.color, status: v.status };
+      // Lead and project access can only be changed by the Bug Tracker Admin (the server enforces this too).
+      const body = isAdmin ? { ...base, lead_id: Number(v.lead_id || 0), members: v.members.map((id) => ({ user_id: Number(id), role: project?.members.find((m) => String(m.user.id) === id)?.role ?? 'member' })) } : base;
       return project ? ProjectsApi.update(project.id, body) : ProjectsApi.create(body);
     },
     onSuccess: (p) => { invalidate(); toast.success(project ? 'Project updated' : 'Project created'); onOpenChange(false); onSaved?.(p); },
@@ -68,11 +72,11 @@ export function ProjectDialog({ open, onOpenChange, project, onSaved }: { open: 
             <Field label="Status" htmlFor="p-status">
               <Controller control={control} name="status" render={({ field }) => <Select id="p-status" value={field.value} onChange={field.onChange} options={[{ value: 'active', label: 'Active' }, { value: 'archived', label: 'Archived' }]} />} />
             </Field>
-            <Field label="Project lead" htmlFor="p-lead" error={errors.lead_id?.message}>
+            {isAdmin && <Field label="Project lead" htmlFor="p-lead" error={errors.lead_id?.message}>
               <Controller control={control} name="lead_id" render={({ field }) => <Select id="p-lead" value={field.value} onChange={field.onChange} emptyLabel="No lead" placeholder="No lead" options={(users.data?.items ?? []).map((u) => ({ value: String(u.id), label: u.name }))} />} />
-            </Field>
+            </Field>}
           </div>
-          <Field label="Members" error={errors.members?.message as string | undefined} hint="Members can see this project's bugs. The lead is always a member.">
+          {isAdmin && <Field label="Members" error={errors.members?.message as string | undefined} hint="Members can see this project's bugs. The lead is always a member.">
             <div className="rounded-md border border-input">
               <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter users…" aria-label="Filter users" className="rounded-b-none border-0 border-b" />
               <Controller control={control} name="members" render={({ field }) => (
@@ -94,7 +98,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSaved }: { open: 
                 </ul>
               )} />
             </div>
-          </Field>
+          </Field>}
           <div className="flex justify-end gap-2 pt-1">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" loading={save.isPending}>{project ? 'Save changes' : 'Create project'}</Button>

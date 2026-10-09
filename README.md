@@ -17,6 +17,9 @@ bug-tracker/                  <- the plugin (zip/copy this folder into wp-conten
 │   ├── class-notifications.php
 │   └── rest/                 bugs, projects, dashboard/reports/users/settings controllers
 ├── includes/class-app-page.php  the standalone /bug-tracker/ URL (rewrite rule + HTML shell)
+├── includes/class-users.php     plugin-owned user registry, Bug Tracker Admin, migration, audit
+├── includes/class-license.php   licence provider seam (user limits)
+├── includes/rest/class-users-controller.php  /tracker-users/* (admin only)
 ├── includes/class-demo-data.php generate / remove sample data
 ├── admin/class-admin-page.php   wp-admin menu link that opens the app
 ├── admin/class-settings-page.php wp-admin 'Settings & tools' screen (demo data)
@@ -24,6 +27,13 @@ bug-tracker/                  <- the plugin (zip/copy this folder into wp-conten
 ├── build/                    compiled app.js / app.css (committed so the plugin is installable as-is)
 ├── package.json, vite.config.ts, tailwind.config.js
 ```
+
+## User management & licensing
+* **Bug Tracker Admin:** one user, assigned by a *site administrator* in **wp-admin → Bug Tracker → Settings & tools**. Only the Bug Tracker Admin can open the *Users* screen or call `/tracker-users/*` (add existing WordPress users, create new ones, edit, activate/deactivate, remove, assign projects). Everyone else gets 403, including WordPress administrators.
+* **Initial setup:** activating the plugin as a site administrator makes that person the first Bug Tracker Admin. If nobody is assigned (WP-CLI activation, or an upgraded site), the app shows a *setup required* screen and a wp-admin notice until a site administrator assigns one. Existing users are migrated into the tracker automatically (permissions derived from their old capabilities, effective project access preserved) – the admin choice is never guessed.
+* **Statuses:** *active*, *inactive* (account kept, access suspended) and *removed* (soft delete: bugs, comments and audit history are preserved, project access revoked; can be restored). The WordPress account is never deleted.
+* **Licensing seam:** `BT_License` is the only place that knows about user limits (`includes/class-license.php`). Plans live in a filterable table (`bug_tracker_license_plans`), the whole provider can be replaced (`bug_tracker_license_provider`) and the final number can be overridden (`bug_tracker_max_active_users`). Every code path that activates a user calls `BT_License::assert_can_activate()`; inactive/removed users do not use a seat. No payment code is included.
+* **Audit:** user-management actions are written to the existing activity table (`user_added`, `user_activated`, `user_deactivated`, `user_removed`, `user_updated`, `access_granted`, `access_revoked`, `admin_assigned`).
 
 ## Settings, favourites and demo data
 * **Collapsible sidebar:** the burger button in the top bar collapses the sidebar to icons (remembered per user).
@@ -56,8 +66,9 @@ Attachments are stored in `wp-content/uploads/bug-tracker/` (direct web access d
 
 ## Security model
 * Cookie authentication + `X-WP-Nonce`; requests without a valid nonce are treated as anonymous and rejected (the server also hands back a fresh nonce in `X-BT-Nonce` so long-lived tabs keep working).
-* Capabilities: `view_bug_tracker`, `create_bug`, `edit_bug`, `delete_bug`, `manage_projects`, `manage_bug_tracker`, `manage_bug_tracker_users`. Administrators get all; the plugin adds **Bug Tracker Project Manager** and **Bug Tracker Contributor** roles. Role → capability mapping is editable in *Settings → User permissions*.
-* Record-level access: unless "limit visibility to project members" is turned off, non-managers only see projects they belong to (plus bugs they reported or are assigned). Hidden bugs return 404, not 403.
+* **Plugin-owned access control – WordPress roles/capabilities are not used.** WordPress only authenticates (who is logged in). Who may use the tracker, and what they may do, lives in the plugin's own `bug_tracker_users` table.
+* Permissions: every active tracker user can view the projects they are assigned to; each user additionally has toggleable flags `create_bug`, `edit_bug`, `delete_bug`, `manage_projects`. Settings, user management, project access and demo data are reserved for the single **Bug Tracker Admin**.
+* Project access is strictly by explicit assignment (`project_members`). Being a project's lead, creator, or a bug's reporter/assignee no longer grants access by itself. Hidden projects/bugs return 404, not 403.
 * All input is validated/sanitised server-side; SQL uses `$wpdb->prepare` and whitelists for ordering; uploads are type-checked by content (no SVG/PHP), size-limited and renamed; e-mails are only exposed to users with `manage_bug_tracker_users`.
 
 ## REST API (`/wp-json/bug-tracker/v1/`)
@@ -67,4 +78,5 @@ Attachments are stored in `wp-content/uploads/bug-tracker/` (direct web access d
 `POST /bugs/{id}/attachments` · `DELETE /attachments/{id}` · `GET /attachments/{id}/download` ·
 `GET|POST /projects` · `GET|PUT|DELETE /projects/{id}` · `PUT /projects/{id}/favorite` ·
 `GET /notifications` · `PUT /notifications/{id}/read` · `PUT /notifications/read-all` ·
-`GET|PUT /settings`
+`GET|PUT /settings` ·
+`GET|POST /tracker-users` · `PUT|DELETE /tracker-users/{id}` · `PUT /tracker-users/{id}/projects/{project_id}` · `GET /tracker-users/candidates|license` (Bug Tracker Admin only)

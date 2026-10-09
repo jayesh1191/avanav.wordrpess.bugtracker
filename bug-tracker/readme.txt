@@ -19,5 +19,12 @@ A complete bug-tracking system for WordPress. The whole interface is a React app
 3. Create a project and add members, then start reporting bugs.
 
 == Changelog ==
+= 1.1.0 =
+* Custom user management: Bug Tracker access, per-user permissions and project assignments are managed by the plugin (WordPress roles/capabilities are no longer used).
+* New Bug Tracker Admin setting (assigned by a site administrator); only that user can manage tracker users.
+* Accordion user screen with search, filters, activate/deactivate, remove (history preserved) and per-project access.
+* Licence seam (`BT_License`) for a future paid active-user limit.
+* Existing installs are migrated automatically and non-destructively.
+
 = 1.0.0 =
 * Initial release.
